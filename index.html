@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0E1014" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>SIGNAL — Market Intelligence for NQ &amp; ES</title>
+<meta name="description" content="Real-time market signal for NQ and ES futures traders. Live news impact ranking and geopolitical risk." />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="neon-glow" aria-hidden="true"></div>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="#signal">
+      <span class="brand-mark">S</span>
+      <span>SIGNAL</span>
+      <span class="brand-pulse" aria-hidden="true"></span>
+    </a>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="signal" role="tab" aria-label="Signal" title="Signal">
+        <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+          <path d="M8.5 15.5a5 5 0 0 1 0-7"/>
+          <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+          <path d="M5.5 18.5a9 9 0 0 1 0-13"/>
+          <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+        </svg>
+      </button>
+      <button class="tab-btn" data-tab="geopolitical" role="tab" aria-label="Geopolitical" title="Geopolitical">
+        <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3 12h18"/>
+          <path d="M12 3a13 13 0 0 1 0 18"/>
+          <path d="M12 3a13 13 0 0 0 0 18"/>
+        </svg>
+      </button>
+    </nav>
+    <div class="header-meta">
+      <span><span class="dot"></span><span data-clock>--:--</span></span>
+      <span class="signal-pill" id="signal-pill-mini" aria-label="Forecast read"></span>
+      <button class="refresh-btn" id="refresh-btn">Refresh</button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- ============================== SIGNAL ============================== -->
+  <section class="tab-panel active" data-panel="signal">
+    <div class="tm-hero" id="tm-hero">
+      <div class="tm-hero-flag">
+        <span class="tm-flag-dot"></span>
+        <span id="tm-flag-label">HIGHEST MARKET IMPACT · LIVE</span>
+      </div>
+      <div class="tm-hero-body">
+        <div class="tm-hero-meta">
+          <span class="tm-source" id="tm-source">—</span>
+          <span class="tm-sep">·</span>
+          <span class="tm-time" id="tm-time">—</span>
+          <span class="tm-sep">·</span>
+          <span class="tm-sent" id="tm-sent">—</span>
+        </div>
+        <h2 class="tm-hero-title" id="tm-title">Ranking incoming headlines…</h2>
+        <p class="tm-hero-summary" id="tm-summary">Live wire feeds are being scored for market impact. The story with the biggest projected effect on NQ and ES will appear here.</p>
+
+        <div class="tm-impact">
+          <div class="tm-impact-row">
+            <div class="tm-impact-label">Market Impact Score</div>
+            <div class="tm-impact-num" id="tm-score">—</div>
+          </div>
+          <div class="tm-impact-bar"><div class="tm-impact-fill" id="tm-fill"></div></div>
+          <div class="tm-impact-row">
+            <div class="tm-impact-label" id="tm-impact-verdict">Awaiting data</div>
+            <div class="tm-impact-peer" id="tm-peer">—</div>
+          </div>
+        </div>
+
+        <div class="tm-why">
+          <div class="tm-why-label">Why it's moving</div>
+          <div class="tm-tags" id="tm-tags"></div>
+        </div>
+
+        <a class="tm-cta" id="tm-link" target="_blank" rel="noopener noreferrer">Read the full story →</a>
+      </div>
+    </div>
+
+    <div class="top3-grid" id="top3-runners"></div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>The Feed</h2>
+        <div class="meta">Filler filtered out — only stories the tape actually cares about</div>
+      </div>
+      <div class="legend">
+        <span>Filter:</span>
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="bullish">Bullish</button>
+        <button class="chip" data-filter="bearish">Bearish</button>
+        <button class="chip" data-filter="neutral">Neutral</button>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-mute)">
+          <span id="news-count">0</span> stories ·
+          <span id="news-sources">—</span>
+        </span>
+      </div>
+      <div class="news-feed" id="news-feed" style="margin-top:22px"></div>
+    </div>
+  </section>
+
+  <!-- =========================== GEOPOLITICAL =========================== -->
+  <section class="tab-panel" data-panel="geopolitical">
+    <div class="sr-bar">
+      <div class="sr-tag"><span class="sr-tag-dot"></span> OPERATIONS · LIVE</div>
+      <div class="sr-bar-title">SIGNAL // GLOBAL SITUATION DESK</div>
+      <div class="sr-tag"><span data-sr-clock>--:--:--</span> UTC</div>
+    </div>
+
+    <div class="geo-ticker" id="geo-ticker">
+      <div class="geo-ticker-label">LIVE WIRE</div>
+      <div class="geo-ticker-viewport">
+        <div class="geo-ticker-track" id="geo-ticker-track"></div>
+      </div>
+    </div>
+
+    <div class="geo-layout">
+      <div class="geo-map">
+        <svg class="geo-globe" id="globe-svg" viewBox="0 0 720 720" preserveAspectRatio="xMidYMid meet" aria-label="Interactive globe"></svg>
+        <div class="globe-ring"></div>
+        <div class="globe-crosshair"></div>
+        <div class="globe-scanline"></div>
+        <div class="globe-corners">
+          <span class="c c-tl"></span><span class="c c-tr"></span>
+          <span class="c c-bl"></span><span class="c c-br"></span>
+        </div>
+
+        <div class="geo-country-tip" id="geo-country-tip" aria-hidden="true"></div>
+        <div class="geo-cursor-coord" id="geo-cursor-coord">LAT — · LNG —</div>
+        <div class="flashpoint-popup" id="flashpoint-popup" aria-hidden="true"></div>
+
+        <div class="geo-map-caption">
+          <span>ACTIVE · <span id="geo-count-live">—</span></span>
+          <span id="active-risk-title">Awaiting telemetry</span>
+        </div>
+        <div class="globe-controls">
+          <button class="gc-btn" data-rotate="toggle" id="globe-toggle" aria-label="Pause rotation">PAUSE</button>
+          <button class="gc-btn" data-rotate="left" aria-label="Rotate left">◀</button>
+          <button class="gc-btn" data-rotate="right" aria-label="Rotate right">▶</button>
+          <button class="gc-btn" data-zoom="in" aria-label="Zoom in">+</button>
+          <button class="gc-btn" data-zoom="out" aria-label="Zoom out">−</button>
+          <button class="gc-btn" data-zoom="reset" aria-label="Reset view">◉</button>
+        </div>
+      </div>
+
+      <div class="geo-sidebar">
+        <div class="geo-metrics" id="geo-metrics">
+          <div class="metric-cell metric-cell-wide">
+            <div class="metric-label">GLOBAL RISK INDEX</div>
+            <div class="metric-value" id="metric-index">—</div>
+            <div class="metric-sub" id="metric-index-sub">—</div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="metric-index-fill"></div></div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">HIGH</div>
+            <div class="metric-value metric-hot" id="metric-high">—</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">MED</div>
+            <div class="metric-value metric-warn" id="metric-med">—</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">LOW</div>
+            <div class="metric-value metric-cool" id="metric-low">—</div>
+          </div>
+        </div>
+
+        <div class="geo-filters">
+          <span class="geo-filters-label">SEV</span>
+          <button class="geo-chip active" data-sev="all">ALL</button>
+          <button class="geo-chip" data-sev="high">HIGH</button>
+          <button class="geo-chip" data-sev="medium">MED</button>
+          <button class="geo-chip" data-sev="low">LOW</button>
+        </div>
+
+        <div class="geo-risks" id="geo-risks"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Cross-Asset Impact Matrix</h2>
+        <div class="meta">First-order market reactions</div>
+      </div>
+      <div class="card" id="impact-matrix"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div>SIGNAL // Market Intelligence for NQ &amp; ES Futures</div>
+  <div>Auto-refresh every 5 min · <span id="last-updated">—</span></div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
