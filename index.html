@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
 <link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/terminal.css" />
+<link rel="stylesheet" href="css/terminal.css?v=2" />
 </head>
 <body>
 
@@ -128,59 +128,117 @@
 
   <!-- ============================= TERMINAL ============================= -->
   <section class="tab-panel" data-panel="terminal">
-    <div class="term">
-      <div class="term-statusbar">
-        <span class="term-brand">SIGNAL // TERMINAL</span>
-        <span class="term-sep">·</span>
-        <span class="term-status"><span class="term-dot"></span><span id="term-status-text">CONNECTING…</span></span>
-        <span class="term-sep">·</span>
-        <span id="term-net">NET —</span>
-        <span class="term-sep">·</span>
-        <span>SESSION <span id="term-session">--:--</span></span>
-        <span class="term-spacer"></span>
-        <span id="term-clock">--:--:--</span> ET
+    <div class="term" id="term-root">
+      <div class="term-scanlines" aria-hidden="true"></div>
+      <div class="term-vignette" aria-hidden="true"></div>
+
+      <div class="term-header">
+        <pre class="term-ascii" aria-hidden="true">
+ ██████╗ ██╗      ██████╗  ██████╗ ███╗   ███╗██████╗ ███████╗██████╗  ██████╗
+ ██╔══██╗██║      ██╔══██╗██╔═══██╗████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔════╝
+ ██████╔╝██║█████╗██████╔╝██║   ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║  ███╗
+ ██╔══██╗██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗██║   ██║
+ ██████╔╝███████╗ ██████╔╝╚██████╔╝██║ ╚═╝ ██║██████╔╝███████╗██║  ██║╚██████╔╝
+ ╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝</pre>
+        <div class="term-sub">NEWS AGGREGATOR &amp; MARKET DATA TERMINAL</div>
       </div>
 
-      <div class="term-grid">
-        <!-- Market Overview -->
-        <div class="term-pane term-overview">
-          <div class="term-pane-h">MARKET OVERVIEW</div>
-          <div class="term-pane-b" id="term-overview"></div>
-        </div>
+      <div class="term-statusline">
+        <span class="t-green">BLOOMBERG TERMINAL</span>
+        <span class="t-pipe">|</span>
+        <span class="t-amber">NEWS AGGREGATOR v2.4.1</span>
+        <span class="t-spacer"></span>
+        <span class="t-dim">LAST UPDATE:</span>
+        <span class="t-amber" id="term-last">--:--:--</span>
+        <span class="t-pipe">|</span>
+        <span class="t-green" id="term-conn">CONNECTED</span>
+        <span class="t-pipe">|</span>
+        <span class="t-dim">LATENCY:</span>
+        <span class="t-amber" id="term-latency">--ms</span>
+      </div>
 
-        <!-- Watchlist -->
-        <div class="term-pane term-watchlist">
-          <div class="term-pane-h">
-            WATCHLIST
-            <span class="term-pane-sub" id="term-watch-count">0</span>
+      <div class="term-cmd">
+        <span class="term-prompt">&gt;</span>
+        <input class="term-input" id="term-input" type="text"
+               placeholder="ENTER COMMAND (HELP FOR OPTIONS)..."
+               autocomplete="off" spellcheck="false" />
+        <button class="term-exec" id="term-exec">EXEC</button>
+      </div>
+
+      <div class="term-quick">
+        <span class="t-dim">QUICK:</span>
+        <button class="term-q" data-cmd="watchlist">STOCKS</button>
+        <button class="term-q" data-cmd="news">NEWS</button>
+        <button class="term-q" data-cmd="watchlist">WATCHLIST</button>
+        <button class="term-q" data-cmd="chart">CHART</button>
+        <button class="term-q" data-cmd="export">EXPORT</button>
+      </div>
+
+      <div class="term-output" id="term-output" hidden></div>
+
+      <div class="term-main">
+        <div class="term-col term-col-news">
+          <div class="term-col-head">
+            <span class="t-amber">NEWS WIRE</span>
+            <span class="t-dim" id="term-news-count">0 ARTICLES</span>
           </div>
-          <div class="term-pane-b">
-            <table class="term-table" id="term-watch">
-              <thead><tr>
-                <th>SYM</th><th class="num">LAST</th><th class="num">CHG</th><th class="num">%</th><th class="num">VOL</th><th class="num">MCAP</th>
-              </tr></thead>
-              <tbody></tbody>
-            </table>
+          <div class="term-col-rule">+------------------------------------------------+</div>
+          <div class="term-col-body" id="term-news"></div>
+          <div class="term-col-foot">
+            <span class="t-dim">SOURCE: NYT API</span>
+            <span class="t-dim">AUTO-REFRESH: 2MIN</span>
           </div>
         </div>
 
-        <!-- News -->
-        <div class="term-pane term-news">
-          <div class="term-pane-h">NEWS FEED <span class="term-pane-sub" id="term-news-count">0</span></div>
-          <div class="term-pane-b" id="term-news"></div>
+        <div class="term-col term-col-data">
+          <div class="term-col-head">
+            <span class="t-amber">EQUITY MARKET DATA</span>
+            <span class="t-dim">REAL-TIME</span>
+          </div>
+          <div class="term-col-rule">+---------------------------------------------------------------------------------------------------+</div>
+          <table class="term-tbl" id="term-tbl">
+            <thead>
+              <tr>
+                <th>SYMBOL</th><th>NAME</th>
+                <th class="num">PRICE</th><th class="num">CHG</th><th class="num">%CHG</th>
+                <th class="num">VOLUME</th><th class="num">DAY HIGH</th><th class="num">DAY LOW</th>
+                <th class="num">TREND</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="term-col-foot term-summary">
+            <span class="t-dim">MARKET SUMMARY</span>
+            <span class="t-spacer"></span>
+            <span class="t-dim">TOTAL MARKET CAP:</span>
+            <span class="t-amber" id="term-mcap">$—</span>
+            <span class="t-pipe">|</span>
+            <span class="t-green" id="term-upcount">— UP</span>
+            <span class="t-dim">/</span>
+            <span class="t-red" id="term-dncount">— DOWN</span>
+          </div>
         </div>
+      </div>
 
-        <!-- Economic Calendar -->
-        <div class="term-pane term-econ">
-          <div class="term-pane-h">ECONOMIC CALENDAR</div>
-          <div class="term-pane-b" id="term-econ"></div>
-        </div>
+      <div class="term-ticker">
+        <div class="term-ticker-track" id="term-ticker"></div>
+      </div>
 
-        <!-- AI Summary -->
-        <div class="term-pane term-ai">
-          <div class="term-pane-h">AI MARKET SUMMARY <span class="term-pane-sub" id="term-ai-time">—</span></div>
-          <div class="term-pane-b" id="term-ai"></div>
-        </div>
+      <div class="term-footer">
+        <span class="t-dim">MARKET STATUS:</span>
+        <span class="t-green" id="term-mkt-status">CLOSED</span>
+        <span class="t-pipe">|</span>
+        <span class="t-dim">NYSE:</span> <span class="t-amber">09:30-16:00 ET</span>
+        <span class="t-pipe">|</span>
+        <span class="t-dim">NASDAQ:</span> <span class="t-amber">09:30-16:00 ET</span>
+        <span class="t-spacer"></span>
+        <span class="t-dim">DATA:</span>
+        <span class="t-green">REAL-TIME</span>
+        <span class="t-pipe">|</span>
+        <span class="t-dim">SHORTCUTS:</span>
+        <span class="t-amber">CTRL+R REFRESH</span>
+        <span class="t-pipe">|</span>
+        <span class="t-amber">ESC CLEAR</span>
       </div>
     </div>
   </section>
@@ -285,6 +343,6 @@
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
-<script src="js/terminal.js"></script>
+<script src="js/terminal.js?v=2"></script>
 </body>
 </html>
