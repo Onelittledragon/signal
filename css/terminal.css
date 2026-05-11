@@ -1,0 +1,269 @@
+/* SIGNAL // Terminal — Bloomberg-style dense data grid */
+
+:root {
+  --t-bg: #07090c;
+  --t-bg-pane: #0b0f14;
+  --t-bg-row: #0e131a;
+  --t-bg-row-hi: #131a23;
+  --t-line: #1a2230;
+  --t-line-hi: #243246;
+  --t-ink: #d8dde6;
+  --t-ink-dim: #8a93a3;
+  --t-ink-mute: #545d6d;
+  --t-amber: #ffb020;
+  --t-amber-dim: #a87410;
+  --t-cyan: #5fd1ff;
+  --t-cyan-dim: #2f7aa8;
+  --t-up: #19d27a;
+  --t-up-bg: rgba(25, 210, 122, 0.10);
+  --t-dn: #ff3a4a;
+  --t-dn-bg: rgba(255, 58, 74, 0.10);
+  --t-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* When the Terminal tab is active, blow away the centered page chrome
+   and take the full viewport like a real terminal. */
+body.terminal-mode { background: var(--t-bg); }
+body.terminal-mode .header { background: rgba(7,9,12,0.92); border-bottom-color: var(--t-line-hi); }
+body.terminal-mode .page { max-width: 100%; padding: 0; }
+body.terminal-mode .footer { display: none; }
+body.terminal-mode .neon-glow { display: none; }
+
+[data-panel="terminal"] { padding: 0; }
+[data-panel="terminal"].active { animation: none; }
+
+.term {
+  font-family: var(--t-mono);
+  color: var(--t-ink);
+  background: var(--t-bg);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 72px);
+  height: calc(100dvh - 72px);
+  min-height: 600px;
+  overflow: hidden;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+.term-statusbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t-ink-dim);
+  background: linear-gradient(180deg, #0b0f14 0%, #07090c 100%);
+  border-bottom: 1px solid var(--t-line-hi);
+}
+.term-brand { color: var(--t-amber); font-weight: 700; letter-spacing: 0.18em; }
+.term-sep { color: var(--t-ink-mute); }
+.term-status { display: inline-flex; align-items: center; gap: 6px; }
+.term-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--t-up);
+  box-shadow: 0 0 8px rgba(25,210,122,0.7);
+  animation: tblink 1.4s ease-in-out infinite;
+}
+.term-dot.err { background: var(--t-dn); box-shadow: 0 0 8px rgba(255,58,74,0.7); }
+@keyframes tblink { 50% { opacity: 0.35; } }
+.term-spacer { flex: 1; }
+
+.term-grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.85fr);
+  grid-template-areas:
+    "overview watchlist news"
+    "overview watchlist news"
+    "ai       econ      news";
+  gap: 1px;
+  background: var(--t-line);
+  min-height: 0;
+}
+
+.term-pane {
+  background: var(--t-bg-pane);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.term-overview { grid-area: overview; }
+.term-watchlist { grid-area: watchlist; }
+.term-news { grid-area: news; }
+.term-econ { grid-area: econ; }
+.term-ai { grid-area: ai; }
+
+.term-pane-h {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--t-amber);
+  background: #0a0d12;
+  border-bottom: 1px solid var(--t-line-hi);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.term-pane-sub { color: var(--t-ink-mute); font-weight: 500; letter-spacing: 0.1em; }
+.term-pane-b {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  font-size: 11.5px;
+}
+.term-pane-b::-webkit-scrollbar { width: 6px; height: 6px; }
+.term-pane-b::-webkit-scrollbar-thumb { background: #1c2533; border-radius: 3px; }
+.term-pane-b::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------------- Market Overview tiles ---------------- */
+#term-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--t-line);
+  padding: 0;
+}
+.ovr-tile {
+  background: var(--t-bg-pane);
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+.ovr-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.10;
+}
+.ovr-tile.up::after { background: linear-gradient(180deg, transparent, var(--t-up)); }
+.ovr-tile.dn::after { background: linear-gradient(180deg, transparent, var(--t-dn)); }
+.ovr-sym { font-size: 10px; letter-spacing: 0.14em; color: var(--t-ink-dim); display: flex; justify-content: space-between; }
+.ovr-name { color: var(--t-ink-mute); font-size: 9px; letter-spacing: 0.1em; }
+.ovr-price { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; color: var(--t-ink); }
+.ovr-change { font-size: 11px; display: flex; gap: 8px; align-items: baseline; }
+.up .ovr-price, .up .ovr-change { color: var(--t-up); }
+.dn .ovr-price, .dn .ovr-change { color: var(--t-dn); }
+
+/* ---------------- Watchlist table ---------------- */
+.term-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+.term-table thead th {
+  position: sticky; top: 0;
+  background: #0a0d12;
+  color: var(--t-ink-mute);
+  font-weight: 500;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-align: left;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--t-line-hi);
+  text-transform: uppercase;
+}
+.term-table th.num, .term-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.term-table tbody tr {
+  border-bottom: 1px solid var(--t-line);
+  transition: background 0.08s linear;
+}
+.term-table tbody tr:hover { background: var(--t-bg-row-hi); }
+.term-table tbody td { padding: 4px 10px; color: var(--t-ink); white-space: nowrap; }
+.term-table td.sym { color: var(--t-amber); font-weight: 600; }
+.term-table td.up   { color: var(--t-up); }
+.term-table td.dn   { color: var(--t-dn); }
+.term-table tr.crypto td.sym { color: var(--t-cyan); }
+.flash-up { animation: flashUp 0.6s ease-out; }
+.flash-dn { animation: flashDn 0.6s ease-out; }
+@keyframes flashUp { 0% { background: var(--t-up-bg); } 100% { background: transparent; } }
+@keyframes flashDn { 0% { background: var(--t-dn-bg); } 100% { background: transparent; } }
+
+/* ---------------- News list ---------------- */
+.term-news-item {
+  display: flex;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--t-line);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background 0.08s linear;
+}
+.term-news-item:hover { background: var(--t-bg-row-hi); }
+.term-news-time { color: var(--t-amber); font-size: 10px; min-width: 42px; }
+.term-news-tickers { color: var(--t-cyan); font-size: 10px; min-width: 60px; }
+.term-news-title { color: var(--t-ink); line-height: 1.4; flex: 1; }
+.term-news-src { color: var(--t-ink-mute); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+
+.term-empty {
+  color: var(--t-ink-mute);
+  font-size: 11px;
+  padding: 14px;
+  text-align: center;
+}
+
+/* ---------------- Economic calendar ---------------- */
+.term-econ-row {
+  display: grid;
+  grid-template-columns: 64px 50px 1fr 60px;
+  gap: 6px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--t-line);
+  font-size: 11px;
+  align-items: baseline;
+}
+.term-econ-date { color: var(--t-amber); font-size: 10px; }
+.term-econ-time { color: var(--t-ink-dim); font-size: 10px; }
+.term-econ-name { color: var(--t-ink); }
+.term-econ-imp { font-size: 9.5px; letter-spacing: 0.1em; text-align: right; }
+.term-econ-imp.high { color: var(--t-dn); }
+.term-econ-imp.med { color: var(--t-amber); }
+.term-econ-imp.low { color: var(--t-ink-mute); }
+
+/* ---------------- AI summary ---------------- */
+#term-ai {
+  padding: 12px 14px;
+  font-family: var(--t-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--t-ink);
+}
+#term-ai .ai-headline {
+  color: var(--t-amber);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+#term-ai .ai-body { color: var(--t-ink-dim); }
+#term-ai .up { color: var(--t-up); }
+#term-ai .dn { color: var(--t-dn); }
+#term-ai .tk { color: var(--t-cyan); font-weight: 600; }
+
+@media (max-width: 960px) {
+  .term { height: auto; min-height: 0; }
+  .term-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "overview"
+      "watchlist"
+      "ai"
+      "news"
+      "econ";
+  }
+  .term-pane { min-height: 280px; }
+}
