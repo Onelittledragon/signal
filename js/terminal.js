@@ -4,6 +4,8 @@
 
 (() => {
   const CFG = window.SIGNAL_CONFIG || {};
+  // Free CORS proxies — both rate-limit aggressively; we tolerate partial
+  // batch failures by keeping state.quotes from the prior successful cycle.
   const PROXIES = [
     'https://api.allorigins.win/raw?url=',
     'https://api.codetabs.com/v1/proxy?quest=',
