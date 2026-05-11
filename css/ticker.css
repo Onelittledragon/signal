@@ -61,7 +61,22 @@ body.terminal-mode .global-ticker { background: #000; border-bottom-color: #1a2a
 /* When terminal mode is active, push the header backdrop to pure black. */
 body.terminal-mode .header { background: #000 !important; }
 
-/* Hide the ticker only on a very narrow viewport where it'd dominate. */
+/* Mobile: push the ticker tape below the iOS status bar / notch so it's
+   visible, and shift the sticky header down to match. */
+@media (max-width: 760px) {
+  .global-ticker {
+    height: calc(24px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    line-height: 24px;
+    font-size: 11px;
+  }
+  .header {
+    top: calc(24px + env(safe-area-inset-top)) !important;
+  }
+  .header-inner {
+    padding-top: 8px !important;   /* ticker already cleared the safe area */
+  }
+}
 @media (max-width: 480px) {
   .global-ticker { font-size: 10.5px; }
 }

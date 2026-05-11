@@ -385,9 +385,82 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   .term-ascii { font-size: 6px; }
 }
 
-/* iPhone — replace the wide ASCII banner with a clean wordmark and pack
-   the status line into a 2-line grid so nothing overflows. */
+/* iPhone — replace the wide ASCII banner with a clean wordmark, put the
+   market-data card grid above the news wire, and pack the status line. */
 @media (max-width: 760px) {
+  /* Stack columns: data first, news second */
+  .term-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .term-col-data  { order: 1; }
+  .term-col-news  { order: 2; }
+  .term-col-data + .term-col-news,
+  .term-col-news { border-top: 1px solid var(--t-line); }
+
+  /* Convert the dense 9-column equity table into readable cards */
+  .term-col-rule { display: none; }
+  .term-tbl thead { display: none; }   /* hide header row only */
+  .term-tbl, .term-tbl tbody, .term-tbl tr {
+    display: block;
+    width: 100%;
+  }
+  .term-tbl tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--t-line);
+    background: #050505;
+  }
+  .term-tbl td { display: block; padding: 0; border: 0; }
+  .term-tbl td.sym {
+    grid-column: 1;
+    color: var(--t-amber);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .term-tbl td.name {
+    grid-column: 1;
+    grid-row: 2;
+    color: var(--t-dim);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .term-tbl td:nth-child(3) {      /* price */
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .term-tbl td:nth-child(5) {      /* %chg */
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .term-tbl td:nth-child(4),       /* abs chg */
+  .term-tbl td:nth-child(6),       /* volume */
+  .term-tbl td:nth-child(7),       /* high */
+  .term-tbl td:nth-child(8) {      /* low */
+    display: none;                 /* trim noise; key numbers stay */
+  }
+  .term-tbl td:nth-child(9) {      /* trend spark */
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding-top: 4px;
+  }
+  .term-tbl td:nth-child(9) .term-spark { width: 100%; height: 22px; }
+  .term-col-head { padding: 10px 16px; font-size: 11px; letter-spacing: 0.18em; }
+  .term-col-foot { padding: 8px 14px; font-size: 10px; flex-wrap: wrap; gap: 4px; }
+  .term-col-foot .t-pipe { display: none; }
+  .term-summary { gap: 6px 10px; }
+
   .term-ascii {
     display: none;
   }

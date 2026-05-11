@@ -81,9 +81,13 @@ button { font-family: inherit; }
 .header-meta { display: flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-mute); }
 .header-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bull); display: inline-block; margin-right: 6px; vertical-align: middle; animation: blink 2s infinite; }
 @keyframes blink { 50% { opacity: 0.35; } }
-.refresh-btn { background: transparent; border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; transition: all 0.15s ease; }
+.refresh-btn { background: transparent; border: 1px solid var(--line-strong); border-radius: 10px; width: 36px; height: 36px; padding: 0; color: var(--ink-soft); cursor: pointer; transition: all 0.15s ease; display: inline-grid; place-items: center; }
+.refresh-btn svg { display: block; }
 .refresh-btn:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.refresh-btn:active { transform: scale(0.92); }
 .refresh-btn.spinning { pointer-events: none; opacity: 0.6; }
+.refresh-btn.spinning svg { animation: refresh-spin 0.9s linear infinite; }
+@keyframes refresh-spin { to { transform: rotate(360deg); } }
 .mobile-toggle { display: none; background: none; border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 10px; font-family: var(--mono); font-size: 12px; cursor: pointer; }
 
 /* Layout */
@@ -974,7 +978,7 @@ body.situation-room .geo-risks { max-height: 760px; }
   .header-meta > span:first-child { display: none; }  /* hide clock on phone */
   .signal-pill { width: 32px; height: 32px; }
   .signal-pill .pill-ico { width: 18px; height: 18px; }
-  .refresh-btn { padding: 7px 12px; font-size: 10.5px; letter-spacing: 0.08em; min-height: 34px; }
+  .refresh-btn { width: 38px; height: 38px; padding: 0; }
 
   /* --- Bottom tab bar (iOS-style, fixed) --- */
   .tabs {
@@ -1138,7 +1142,7 @@ body.situation-room .geo-risks { max-height: 760px; }
    keep the S pill + pulse so the header fits cleanly. */
 @media (max-width: 380px) {
   .brand > span:nth-child(2) { display: none; }
-  .refresh-btn { padding: 7px 9px; font-size: 10px; }
+  .refresh-btn { width: 34px; height: 34px; padding: 0; }
 }
 
 /* ============================ TOP MOVER ============================== */
