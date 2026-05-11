@@ -384,3 +384,40 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   .term-col-news { border-right: none; border-bottom: 1px solid var(--t-line); min-height: 280px; }
   .term-ascii { font-size: 6px; }
 }
+
+/* iPhone — replace the wide ASCII banner with a clean wordmark and pack
+   the status line into a 2-line grid so nothing overflows. */
+@media (max-width: 760px) {
+  .term-ascii {
+    display: none;
+  }
+  .term-header {
+    padding: 14px 16px 10px;
+  }
+  .term-header::before {
+    content: "BLOOMBERG";
+    display: block;
+    color: var(--t-amber);
+    font-family: var(--t-mono);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.28em;
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(255,176,0,0.35);
+  }
+  .term-sub { font-size: 9.5px; letter-spacing: 0.18em; margin-top: 6px; }
+  .term-statusline {
+    flex-wrap: wrap;
+    row-gap: 4px;
+    padding: 8px 14px;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+  .term-statusline .t-pipe { display: none; }
+  .term-statusline .t-spacer { flex-basis: 100%; height: 0; }
+  .term-cmd { padding: 10px 14px; }
+  .term-input { font-size: 12px; }
+  .term-exec { padding: 8px 12px; font-size: 11px; min-height: 38px; }
+  .term-quick { padding: 8px 14px; gap: 6px; font-size: 10.5px; flex-wrap: wrap; }
+  .term-q { padding: 7px 11px; min-height: 34px; }
+}

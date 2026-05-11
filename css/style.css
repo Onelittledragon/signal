@@ -60,7 +60,7 @@ button { font-family: inherit; }
   align-items: center;
   gap: 32px;
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: 0.02em; }
+.brand { display: none !important; }   /* logo removed per design */
 .brand-mark { width: 28px; height: 28px; border-radius: 20%; background: #000; color: #00FF41; display: grid; place-items: center; font-size: 11px; font-weight: 900; font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; line-height: 1; }
 .brand-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--bull); animation: pulse 2s infinite; }
 @keyframes pulse {
@@ -74,6 +74,7 @@ button { font-family: inherit; }
 .tabs { display: flex; gap: 4px; flex: 1; }
 .tab-btn { background: none; border: none; padding: 0; width: 40px; height: 40px; border-radius: 11px; color: var(--ink-soft); cursor: pointer; transition: all 0.18s ease; display: inline-grid; place-items: center; }
 .tab-btn .tab-ico { width: 22px; height: 22px; display: block; }
+.tab-label { display: none; }   /* labels appear only in the mobile bottom bar */
 .tab-btn:hover { background: var(--bg-alt); color: var(--ink); }
 .tab-btn.active { background: var(--ink); color: var(--bg); box-shadow: 0 4px 14px rgba(26,29,35,0.18); }
 .tab-btn.active .tab-ico { transform: scale(1.04); }
@@ -956,43 +957,81 @@ body.situation-room .geo-risks { max-height: 760px; }
   .geo-layout { grid-template-columns: 1fr; }
 }
 
-/* ===== iPhone / phone layout ===== */
+/* ===== iPhone / phone layout — iOS-style: compact top, bottom tab bar ===== */
 @media (max-width: 760px) {
-  /* --- Header: two rows. Row 1 brand+meta, Row 2 icon tabs centered. --- */
+  /* --- Header: compact top bar, no logo. Just status + refresh. --- */
   .header-inner {
-    padding: 10px 14px;
-    padding-top: calc(10px + env(safe-area-inset-top));
+    padding: 8px 14px;
+    padding-top: calc(8px + env(safe-area-inset-top));
     padding-left: calc(14px + env(safe-area-inset-left));
     padding-right: calc(14px + env(safe-area-inset-right));
-    gap: 10px;
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
-  .brand { order: 1; font-size: 15px; gap: 9px; }
-  .brand-mark { width: 26px; height: 26px; font-size: 13px; border-radius: 7px; }
-  .header-meta { order: 2; margin-left: auto; gap: 10px; font-size: 11px; }
-  .header-meta > span:first-child { display: none; }  /* hide clock on phone */
-  .signal-pill { width: 34px; height: 34px; }
-  .signal-pill .pill-ico { width: 20px; height: 20px; }
-  .refresh-btn { padding: 7px 11px; font-size: 10.5px; letter-spacing: 0.08em; }
-
-  .tabs {
-    order: 3;
-    width: 100%;
-    justify-content: center;
     gap: 8px;
-    padding-top: 10px;
-    margin-top: 8px;
-    border-top: 1px solid var(--line);
+    min-height: 44px;
+    align-items: center;
   }
-  .tab-btn { width: 44px; height: 44px; border-radius: 12px; }   /* ≥44px Apple HIG */
-  .tab-btn .tab-ico { width: 23px; height: 23px; }
+  .brand { display: none !important; }   /* logo removed everywhere */
+  .header-meta { margin-left: auto; gap: 10px; font-size: 11px; }
+  .header-meta > span:first-child { display: none; }  /* hide clock on phone */
+  .signal-pill { width: 32px; height: 32px; }
+  .signal-pill .pill-ico { width: 18px; height: 18px; }
+  .refresh-btn { padding: 7px 12px; font-size: 10.5px; letter-spacing: 0.08em; min-height: 34px; }
+
+  /* --- Bottom tab bar (iOS-style, fixed) --- */
+  .tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    gap: 0;
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    background: rgba(14,16,20,0.92);
+    backdrop-filter: saturate(180%) blur(22px);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  }
+  .tab-btn {
+    flex: 1 1 0;
+    width: auto;
+    height: 52px;
+    min-height: 52px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    color: var(--ink-mute);
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+  .tab-btn:active { transform: scale(0.92); }
+  .tab-btn .tab-ico { width: 22px; height: 22px; stroke-width: 2; }
+  .tab-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: inherit;
+  }
+  .tab-btn.active {
+    color: var(--bull);
+    background: transparent;
+    box-shadow: none;
+  }
+  .tab-btn.active .tab-ico { filter: drop-shadow(0 0 6px rgba(48,211,122,0.5)); }
   .mobile-toggle { display: none !important; }
 
-  /* --- Page content: tighter padding + safe-area bottom --- */
+  /* --- Page content: tighter padding + leave room for fixed bottom tab bar --- */
   .page {
-    padding: 20px 14px 32px;
-    padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    padding: 18px 14px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
     padding-left: calc(14px + env(safe-area-inset-left));
     padding-right: calc(14px + env(safe-area-inset-right));
   }

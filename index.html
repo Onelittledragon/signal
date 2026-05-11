@@ -15,10 +15,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
-<link rel="stylesheet" href="css/style.css?v=2" />
-<link rel="stylesheet" href="css/terminal.css?v=4" />
+<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/terminal.css?v=5" />
 <link rel="stylesheet" href="css/ticker.css?v=2" />
-<link rel="stylesheet" href="css/heatmap.css?v=2" />
+<link rel="stylesheet" href="css/heatmap.css?v=4" />
 </head>
 <body>
 
@@ -33,11 +33,6 @@
 
 <header class="header">
   <div class="header-inner">
-    <a class="brand" href="#signal">
-      <span class="brand-mark">&gt;_S</span>
-      <span>SIGNAL</span>
-      <span class="brand-pulse" aria-hidden="true"></span>
-    </a>
     <nav class="tabs" role="tablist">
       <button class="tab-btn active" data-tab="signal" role="tab" aria-label="Signal" title="Signal">
         <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -47,6 +42,7 @@
           <path d="M5.5 18.5a9 9 0 0 1 0-13"/>
           <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
         </svg>
+        <span class="tab-label">Signal</span>
       </button>
       <button class="tab-btn" data-tab="terminal" role="tab" aria-label="Terminal" title="Terminal">
         <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -54,6 +50,7 @@
           <path d="M7 9l3 3-3 3"/>
           <path d="M13 15h4"/>
         </svg>
+        <span class="tab-label">Terminal</span>
       </button>
       <button class="tab-btn" data-tab="heatmap" role="tab" aria-label="Heatmap" title="Heatmap">
         <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -62,6 +59,7 @@
           <rect x="13" y="10" width="8" height="11" rx="1"/>
           <rect x="3" y="13" width="8" height="8" rx="1"/>
         </svg>
+        <span class="tab-label">Heatmap</span>
       </button>
       <button class="tab-btn" data-tab="geopolitical" role="tab" aria-label="Geopolitical" title="Geopolitical">
         <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -70,6 +68,7 @@
           <path d="M12 3a13 13 0 0 1 0 18"/>
           <path d="M12 3a13 13 0 0 0 0 18"/>
         </svg>
+        <span class="tab-label">World</span>
       </button>
     </nav>
     <div class="header-meta">
@@ -444,5 +443,25 @@
 <script src="js/terminal.js?v=6"></script>
 <script src="js/ticker.js?v=3"></script>
 <script src="js/heatmap.js?v=3"></script>
+<script>
+  // Mobile: relocate the tab nav out of .header so position:fixed escapes the
+  // backdrop-filter containing block and pins to the viewport bottom.
+  (() => {
+    const tabs = document.querySelector('.tabs');
+    if (!tabs) return;
+    const originalParent = tabs.parentNode;
+    const originalNext = tabs.nextSibling;
+    const mq = window.matchMedia('(max-width: 760px)');
+    const apply = () => {
+      if (mq.matches) {
+        if (tabs.parentNode !== document.body) document.body.appendChild(tabs);
+      } else {
+        if (tabs.parentNode === document.body) originalParent.insertBefore(tabs, originalNext);
+      }
+    };
+    apply();
+    mq.addEventListener('change', apply);
+  })();
+</script>
 </body>
 </html>
