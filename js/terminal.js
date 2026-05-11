@@ -10,15 +10,13 @@
   ];
 
   // ---------- Instruments ----------
-  // Futures + key indexes
+  // Futures (NQ + ES only — VIX/DXY removed per spec).
   const FUTURES = [
     { sym: 'NQ',  name: 'E-mini Nasdaq', yf: 'NQ=F' },
     { sym: 'ES',  name: 'E-mini S&P',    yf: 'ES=F' },
-    { sym: 'VIX', name: 'Volatility',    yf: '^VIX' },
-    { sym: 'DXY', name: 'Dollar Index',  yf: 'DX-Y.NYB' },
   ];
 
-  // Stocks watchlist
+  // Stocks watchlist (rendered in the terminal table + ticker).
   const STOCKS = [
     { sym: 'AAPL',  name: 'Apple Inc.' },
     { sym: 'MSFT',  name: 'Microsoft Corp.' },
@@ -37,9 +35,15 @@
     { sym: 'XOM',   name: 'Exxon Mobil' },
   ];
 
-  // Crypto (BTC only)
+  // Crypto (BTC only).
   const CRYPTO = [
     { sym: 'BTC', name: 'Bitcoin', id: 'bitcoin' },
+  ];
+
+  // Additional symbols pulled only for the heatmap (not rendered in the
+  // terminal table). Combined into a single Yahoo fetch.
+  const HEATMAP_EXTRA = [
+    'MA','BAC','HD','PG','KO','NKE','UNH','LLY','JNJ','CVX','ORCL','CRM',
   ];
 
   // ---------- State ----------
@@ -311,6 +315,7 @@
     const yfSymbols = [
       ...FUTURES.map(f => f.yf),
       ...STOCKS.map(s => s.sym),
+      ...HEATMAP_EXTRA,
     ];
     const [stocks, crypto] = await Promise.all([fetchYahoo(yfSymbols), fetchCrypto()]);
 
@@ -326,7 +331,18 @@
     renderTable();
     renderTicker();
     renderStatus();
+    // Notify other modules (ticker, heatmap) of fresh data.
+    window.dispatchEvent(new CustomEvent('signal:quotes', { detail: { quotes: state.quotes, ts: state.lastUpdate } }));
   }
+
+  // Public surface for other modules.
+  window.SignalMarket = {
+    state,
+    STOCKS,
+    FUTURES,
+    CRYPTO,
+    refresh: refreshQuotes,
+  };
 
   async function refreshNews() {
     const feeds = (CFG.NEWS_FEEDS || []).slice(0, 5);
@@ -573,10 +589,17 @@
 
   // ---------- Boot ----------
   let started = false;
+  let uiBound = false;
+  function ensureUI() {
+    if (uiBound) return;
+    if (!document.querySelector('#term-input')) return;
+    bindCommandUI();
+    uiBound = true;
+  }
   function start() {
     if (started) return;
     started = true;
-    bindCommandUI();
+    ensureUI();
     renderTable();
     renderNews();
     renderStatus();
@@ -595,9 +618,16 @@
     const active = document.querySelector('.tab-panel.active');
     const isTerm = active && active.dataset.panel === 'terminal';
     document.body.classList.toggle('terminal-mode', !!isTerm);
-    if (isTerm) start();
+    ensureUI();
   }
   document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => setTimeout(onTabChange, 30)));
   window.addEventListener('hashchange', () => setTimeout(onTabChange, 30));
-  setTimeout(onTabChange, 100);
+  // Start data fetching immediately on page load so the global ticker and
+  // heatmap have data even before the user opens the Terminal tab.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { start(); onTabChange(); });
+  } else {
+    start();
+    setTimeout(onTabChange, 50);
+  }
 })();

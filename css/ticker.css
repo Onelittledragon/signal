@@ -1,0 +1,61 @@
+/* Global scrolling ticker tape — always above the SIGNAL header.
+   Stays visible on every tab and sits above the nav. */
+
+.global-ticker {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  width: 100%;
+  height: 24px;
+  background: #000;
+  border-bottom: 1px solid #1a1a1a;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 24px;
+  letter-spacing: 0.04em;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+/* When the Terminal tab paints the body black, just keep the ticker black too. */
+body.terminal-mode .global-ticker { background: #000; border-bottom-color: #1a2a1a; }
+
+.global-ticker-track {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: gt-marquee 90s linear infinite;
+  will-change: transform;
+}
+@keyframes gt-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.gt-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0 18px 0 0;
+}
+.gt-sym  { color: #d8d8d8; font-weight: 700; letter-spacing: 0.06em; }
+.gt-px   { color: #f0f0f0; font-variant-numeric: tabular-nums; }
+.gt-chg  { font-variant-numeric: tabular-nums; }
+.gt-up   { color: #19d27a; }
+.gt-dn   { color: #ff3a4a; }
+.gt-arrow { font-size: 9px; }
+.gt-bar  { color: #2a2a2a; padding: 0 10px 0 0; }
+
+.gt-loading { color: #555; padding-left: 18px; }
+
+/* Push the SIGNAL header down below the ticker so they stack. */
+.header { top: 24px !important; }
+
+/* When terminal mode is active, push the header backdrop to pure black. */
+body.terminal-mode .header { background: #000 !important; }
+
+/* Hide the ticker only on a very narrow viewport where it'd dominate. */
+@media (max-width: 480px) {
+  .global-ticker { font-size: 10.5px; }
+}
