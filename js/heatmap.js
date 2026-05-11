@@ -25,17 +25,22 @@
 
   function renderTiles() {
     const quotes = window.SignalMarket?.state?.quotes;
-    if (!quotes) return;
     for (const sym of TILE_SYMS) {
-      const q = quotes.get(sym);
+      const q = quotes?.get(sym);
       const tile = document.querySelector(`.hm-tile[data-sym="${sym}"]`);
       const pxEl  = document.getElementById(`hm-px-${sym}`);
       const chgEl = document.getElementById(`hm-chg-${sym}`);
       if (!tile || !pxEl || !chgEl) continue;
-      pxEl.textContent  = fmtPrice(q?.last);
-      chgEl.textContent = `${fmtChg(q?.chg)}  (${fmtPct(q?.pct)})`;
+      if (!q) {
+        pxEl.innerHTML  = `<span class="skel" style="width:90px;height:18px;"></span>`;
+        chgEl.innerHTML = `<span class="skel" style="width:120px;height:12px;"></span>`;
+        tile.classList.remove('up', 'dn');
+        continue;
+      }
+      pxEl.textContent  = fmtPrice(q.last);
+      chgEl.textContent = `${fmtChg(q.chg)}  (${fmtPct(q.pct)})`;
       tile.classList.remove('up', 'dn');
-      if (q?.pct != null) tile.classList.add(q.pct >= 0 ? 'up' : 'dn');
+      if (q.pct != null) tile.classList.add(q.pct >= 0 ? 'up' : 'dn');
     }
     const ts = window.SignalMarket?.state?.lastUpdate;
     const up = document.getElementById('hm-updated');
@@ -52,7 +57,11 @@
     const items = news.slice(0, 5);
     if (count) count.textContent = `${items.length} LATEST`;
     if (!items.length) {
-      el.innerHTML = `<div class="hm-news-item" style="cursor:default;color:#707070;">Loading headlines…</div>`;
+      el.innerHTML = Array.from({ length: 4 }).map(() => `
+        <div class="hm-news-item" style="cursor:default;">
+          <div class="hm-news-meta"><span class="skel" style="width:54px"></span><span class="skel" style="width:40px"></span></div>
+          <div class="hm-news-title"><span class="skel skel-line" style="width:90%"></span><span class="skel skel-line" style="width:60%"></span></div>
+        </div>`).join('');
       return;
     }
     el.innerHTML = items.map(n => `

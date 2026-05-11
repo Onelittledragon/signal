@@ -56,6 +56,45 @@
     latencyMs: null,
   };
 
+  // ---------- Cache (localStorage, 30s TTL, stale-while-revalidate) ----------
+  // Always restore prior data instantly so repeat visits feel native; the
+  // background refresh below decides whether to skip the network call when the
+  // cache is still fresh (<30s old).
+  const CACHE_KEY = 'signal:cache:v1';
+  const CACHE_TTL_MS = 30 * 1000;
+  function cacheLoad() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const j = JSON.parse(raw);
+      if (!j || typeof j.ts !== 'number') return null;
+      if (j.quotes) {
+        for (const [k, v] of Object.entries(j.quotes)) state.quotes.set(k, v);
+      }
+      if (Array.isArray(j.news)) {
+        state.news = j.news.map(n => ({ ...n, time: new Date(n.time) }));
+      }
+      if (j.ts) state.lastUpdate = new Date(j.ts);
+      return j.ts;
+    } catch { return null; }
+  }
+  function cacheSave() {
+    try {
+      const payload = {
+        ts: Date.now(),
+        quotes: Object.fromEntries(state.quotes),
+        news: state.news.map(n => ({ ...n, time: n.time instanceof Date ? n.time.toISOString() : n.time })),
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+    } catch {}
+  }
+  function cacheFresh(ts) {
+    return ts != null && (Date.now() - ts) < CACHE_TTL_MS;
+  }
+
+  // Skeleton helpers — used while the very first fetch is in flight.
+  const skel = (w = 50) => `<span class="skel" style="width:${w}px"></span>`;
+
   // ---------- DOM helpers ----------
   const $ = (s, r = document) => r.querySelector(s);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -218,16 +257,17 @@
       const cls = pct == null ? 't-dim' : (pct >= 0 ? 'up' : 'dn');
       if (pct != null) { pct >= 0 ? upCount++ : dnCount++; }
       if (q?.mcap) mcapTotal += q.mcap;
-      const sparkSvg = q?.spark ? renderSpark(q.spark) : '<span class="t-dim">—</span>';
+      const sparkSvg = q?.spark ? renderSpark(q.spark) : (q ? '<span class="t-dim">—</span>' : skel(70));
+      const cell = (val, fmt, klass) => q ? `<td class="num ${klass}">${fmt(val)}</td>` : `<td class="num">${skel(54)}</td>`;
       rows.push(`<tr data-sym="${esc(inst.sym)}">
         <td class="sym">${esc(inst.sym)}</td>
         <td class="name">${esc(inst.name)}</td>
-        <td class="num ${cls === 't-dim' ? 't-dim' : ''}">${fmtPrice(q?.last)}</td>
-        <td class="num ${cls}">${fmtChg(q?.chg)}</td>
-        <td class="num ${cls}">${fmtPct(pct)}</td>
-        <td class="num t-green">${fmtVol(q?.vol)}</td>
-        <td class="num up">${fmtPrice(q?.high)}</td>
-        <td class="num dn">${fmtPrice(q?.low)}</td>
+        ${cell(q?.last, fmtPrice, cls === 't-dim' ? 't-dim' : '')}
+        ${cell(q?.chg,  fmtChg,   cls)}
+        ${cell(pct,     fmtPct,   cls)}
+        ${cell(q?.vol,  fmtVol,   't-green')}
+        ${cell(q?.high, fmtPrice, 'up')}
+        ${cell(q?.low,  fmtPrice, 'dn')}
         <td class="num">${sparkSvg}</td>
       </tr>`);
     }
@@ -262,9 +302,14 @@
     const el = $('#term-news');
     if (!el) return;
     const items = state.news.slice(0, 50);
-    $('#term-news-count').textContent = `${items.length} ARTICLES`;
+    $('#term-news-count').textContent = items.length ? `${items.length} ARTICLES` : 'LOADING';
     if (!items.length) {
-      el.innerHTML = `<div class="t-dim" style="padding:14px;">[ FETCHING NEWS WIRE ... ]</div>`;
+      el.innerHTML = Array.from({ length: 6 }).map(() => `
+        <div class="term-news-item" style="cursor:default;">
+          <div class="term-news-row1"><span class="skel" style="width:60px"></span><span class="skel" style="width:48px"></span></div>
+          <div class="term-news-title"><span class="skel skel-line" style="width:88%"></span></div>
+          <div class="term-news-sum"><span class="skel skel-line" style="width:96%"></span><span class="skel skel-line" style="width:62%"></span></div>
+        </div>`).join('');
       return;
     }
     el.innerHTML = items.map(n => `
@@ -330,6 +375,7 @@
 
     state.latencyMs = Math.round(performance.now() - t0);
     state.lastUpdate = new Date();
+    cacheSave();
     renderTable();
     renderTicker();
     renderStatus();
@@ -371,6 +417,7 @@
       if (!k || seen.has(k)) return false;
       seen.add(k); return true;
     }).slice(0, 50);
+    cacheSave();
     renderNews();
     window.dispatchEvent(new CustomEvent('signal:news', { detail: { news: state.news } }));
   }
@@ -603,11 +650,28 @@
     if (started) return;
     started = true;
     ensureUI();
+    // Hydrate from localStorage BEFORE first render → instant paint on repeat
+    // visits. Always fetch in the background; only delay the network call when
+    // the cached payload is still within the 30s TTL.
+    const cachedTs = cacheLoad();
+    if (state.quotes.size) {
+      window.dispatchEvent(new CustomEvent('signal:quotes', { detail: { quotes: state.quotes, ts: state.lastUpdate } }));
+    }
+    if (state.news.length) {
+      window.dispatchEvent(new CustomEvent('signal:news', { detail: { news: state.news } }));
+    }
     renderTable();
     renderNews();
     renderStatus();
-    refreshQuotes();
-    refreshNews();
+    if (cacheFresh(cachedTs)) {
+      // Schedule refresh for when the cache would go stale instead of hitting
+      // the network immediately.
+      const delay = Math.max(0, CACHE_TTL_MS - (Date.now() - cachedTs));
+      setTimeout(() => { refreshQuotes(); refreshNews(); }, delay);
+    } else {
+      refreshQuotes();
+      refreshNews();
+    }
     setInterval(refreshQuotes, 15000);
     setInterval(refreshNews, 120 * 1000);
     setInterval(() => {

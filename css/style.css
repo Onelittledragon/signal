@@ -68,6 +68,9 @@ button { font-family: inherit; }
   70% { box-shadow: 0 0 0 10px rgba(48,211,122,0); }
   100% { box-shadow: 0 0 0 0 rgba(48,211,122,0); }
 }
+
+/* Skeleton extras — base .skel rule lives below near .sr-* skeletons. */
+.skel-line { display: block; height: 10px; margin: 6px 0; border-radius: 3px; min-width: 0; }
 .tabs { display: flex; gap: 4px; flex: 1; }
 .tab-btn { background: none; border: none; padding: 0; width: 40px; height: 40px; border-radius: 11px; color: var(--ink-soft); cursor: pointer; transition: all 0.18s ease; display: inline-grid; place-items: center; }
 .tab-btn .tab-ico { width: 22px; height: 22px; display: block; }
@@ -710,7 +713,7 @@ body.mood-bear .signal-pill {
 .toast.show { opacity: 1; transform: translateY(0); }
 
 /* Skeleton */
-.skel { background: linear-gradient(90deg, var(--bg-alt) 0%, var(--line) 50%, var(--bg-alt) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; border-radius: 6px; color: transparent; display: inline-block; min-width: 80px; height: 14px; }
+.skel { background: linear-gradient(90deg, var(--bg-alt) 0%, var(--line) 50%, var(--bg-alt) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; border-radius: 4px; color: transparent; display: inline-block; vertical-align: middle; min-width: 16px; height: 12px; }
 @keyframes shimmer {
   from { background-position: -200% 0; }
   to { background-position: 200% 0; }

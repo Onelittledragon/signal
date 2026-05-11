@@ -34,12 +34,21 @@
     return out.join('');
   }
 
+  function renderSkeleton(el) {
+    const chip = `<span class="gt-item">
+        <span class="gt-sym"><span class="skel" style="width:34px"></span></span>
+        <span class="gt-px"><span class="skel" style="width:52px"></span></span>
+        <span class="skel" style="width:46px"></span>
+      </span><span class="gt-bar">|</span>`;
+    el.innerHTML = chip.repeat(10);
+  }
+
   function render() {
     const mkt = window.SignalMarket;
     const el = document.getElementById(TRACK_ID);
     if (!el || !mkt) return;
     const quotes = mkt.state?.quotes;
-    if (!quotes || quotes.size === 0) return;
+    if (!quotes || quotes.size === 0) { renderSkeleton(el); return; }
 
     // Symbol order: futures, stocks, crypto.
     const order = [
@@ -48,7 +57,7 @@
       ...(mkt.CRYPTO  || []).map(c => c.sym),
     ];
     const segment = buildSegment(quotes, order);
-    if (!segment) return;
+    if (!segment) { renderSkeleton(el); return; }
     // Duplicate the segment so the marquee can wrap seamlessly.
     el.innerHTML = segment + segment;
   }
