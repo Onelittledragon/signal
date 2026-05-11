@@ -370,6 +370,7 @@
       seen.add(k); return true;
     }).slice(0, 50);
     renderNews();
+    window.dispatchEvent(new CustomEvent('signal:news', { detail: { news: state.news } }));
   }
 
   // ---------- Command parser ----------

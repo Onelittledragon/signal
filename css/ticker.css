@@ -49,8 +49,14 @@ body.terminal-mode .global-ticker { background: #000; border-bottom-color: #1a2a
 
 .gt-loading { color: #555; padding-left: 18px; }
 
-/* Push the SIGNAL header down below the ticker so they stack. */
-.header { top: 24px !important; }
+/* Push the SIGNAL header down below the ticker and ensure it stays sticky
+   (style.css contains a `.header, .page, .footer { position: relative }` rule
+   that would otherwise let the header scroll away under the ticker). */
+.header {
+  position: sticky !important;
+  top: 24px !important;
+  z-index: 60 !important;
+}
 
 /* When terminal mode is active, push the header backdrop to pure black. */
 body.terminal-mode .header { background: #000 !important; }

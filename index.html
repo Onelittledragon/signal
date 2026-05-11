@@ -16,9 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
 <link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/terminal.css?v=3" />
-<link rel="stylesheet" href="css/ticker.css?v=1" />
-<link rel="stylesheet" href="css/heatmap.css?v=1" />
+<link rel="stylesheet" href="css/terminal.css?v=4" />
+<link rel="stylesheet" href="css/ticker.css?v=2" />
+<link rel="stylesheet" href="css/heatmap.css?v=2" />
 </head>
 <body>
 
@@ -267,7 +267,7 @@
         <div class="hm-bar-l">
           <span class="hm-title">STOCK HEATMAP</span>
           <span class="hm-sep">·</span>
-          <span class="hm-sub">SIZE = MKT CAP · COLOR = % CHANGE</span>
+          <span class="hm-sub">TRADINGVIEW LIVE WIDGET</span>
         </div>
         <div class="hm-bar-r">
           <span class="hm-dot"></span>
@@ -275,23 +275,55 @@
           <span class="hm-sep">·</span>
           <span class="hm-dim">UPDATED</span>
           <span class="hm-amber" id="hm-updated">—</span>
-          <span class="hm-sep">·</span>
-          <span class="hm-dim">AUTO-REFRESH 60S</span>
         </div>
       </div>
-      <div class="hm-stage" id="hm-stage">
-        <svg id="hm-svg" preserveAspectRatio="none"></svg>
-        <div class="hm-popup" id="hm-popup" hidden></div>
-        <div class="hm-empty" id="hm-empty">Loading market data…</div>
-      </div>
-      <div class="hm-legend">
-        <span class="hm-dim">% CHANGE:</span>
-        <span class="hm-leg hm-leg-1">&lt; -3%</span>
-        <span class="hm-leg hm-leg-2">-3 to -1</span>
-        <span class="hm-leg hm-leg-3">-1 to 0</span>
-        <span class="hm-leg hm-leg-4">0 to +1</span>
-        <span class="hm-leg hm-leg-5">+1 to +3</span>
-        <span class="hm-leg hm-leg-6">&gt; +3%</span>
+
+      <div class="hm-grid">
+        <div class="hm-main">
+          <iframe
+            id="tv-heatmap"
+            title="TradingView Heatmap"
+            src="https://www.tradingview.com/widgetembed/?frameElementId=tradingview_heatmap&amp;symbol=&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=1&amp;saveimage=1&amp;toolbarbg=000000&amp;studies=[]&amp;hideideas=1&amp;theme=dark&amp;style=1&amp;timezone=exchange&amp;withdateranges=1&amp;showpopupbutton=1&amp;studies_overrides={}&amp;overrides={}&amp;enabled_features=[]&amp;disabled_features=[]&amp;locale=en&amp;utm_source=signal&amp;utm_medium=widget"
+            frameborder="0"
+            allowtransparency="true"
+            scrolling="no"
+            allowfullscreen></iframe>
+        </div>
+
+        <aside class="hm-sidebar">
+          <div class="hm-side-head">MARKET OVERVIEW</div>
+          <div class="hm-side-tiles">
+            <div class="hm-tile" data-sym="NQ">
+              <div class="hm-tile-row">
+                <span class="hm-tile-sym">NQ</span>
+                <span class="hm-tile-name">E-mini Nasdaq</span>
+              </div>
+              <div class="hm-tile-price" id="hm-px-NQ">—</div>
+              <div class="hm-tile-chg" id="hm-chg-NQ">—</div>
+            </div>
+            <div class="hm-tile" data-sym="ES">
+              <div class="hm-tile-row">
+                <span class="hm-tile-sym">ES</span>
+                <span class="hm-tile-name">E-mini S&amp;P</span>
+              </div>
+              <div class="hm-tile-price" id="hm-px-ES">—</div>
+              <div class="hm-tile-chg" id="hm-chg-ES">—</div>
+            </div>
+            <div class="hm-tile" data-sym="BTC">
+              <div class="hm-tile-row">
+                <span class="hm-tile-sym">BTC</span>
+                <span class="hm-tile-name">Bitcoin</span>
+              </div>
+              <div class="hm-tile-price" id="hm-px-BTC">—</div>
+              <div class="hm-tile-chg" id="hm-chg-BTC">—</div>
+            </div>
+          </div>
+
+          <div class="hm-side-head hm-side-news-head">NEWS WIRE
+            <span class="hm-side-sub" id="hm-news-count">—</span>
+          </div>
+          <div class="hm-side-news" id="hm-news"></div>
+        </aside>
       </div>
     </div>
   </section>
@@ -396,8 +428,8 @@
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
-<script src="js/terminal.js?v=3"></script>
-<script src="js/ticker.js?v=1"></script>
-<script src="js/heatmap.js?v=1"></script>
+<script src="js/terminal.js?v=4"></script>
+<script src="js/ticker.js?v=2"></script>
+<script src="js/heatmap.js?v=2"></script>
 </body>
 </html>

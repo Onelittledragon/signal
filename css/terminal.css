@@ -12,9 +12,9 @@
   --t-blue-d:    #3878a8;
   --t-cyan:      #00e0e0;
   --t-yellow:    #ffe000;
-  --t-dim:       #6a7a6a;
-  --t-mute:      #2a3a2a;
-  --t-line:      #1a2a1a;
+  --t-dim:       #707070;
+  --t-mute:      #232323;
+  --t-line:      #1a1a1a;
   --t-mono:      'JetBrains Mono', 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
 }
 
@@ -55,7 +55,6 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   flex-direction: column;
   overflow: hidden;
   font-feature-settings: 'tnum' 1, 'zero' 1;
-  text-shadow: 0 0 1px rgba(0,255,102,0.35);
 }
 
 /* CRT scanlines overlay */
@@ -63,8 +62,8 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   position: absolute; inset: 0; pointer-events: none; z-index: 50;
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(255,255,255,0.025) 0px,
-    rgba(255,255,255,0.025) 1px,
+    rgba(255,255,255,0.018) 0px,
+    rgba(255,255,255,0.018) 1px,
     transparent 1px,
     transparent 3px
   );
@@ -98,7 +97,6 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   margin: 0;
   white-space: pre;
   letter-spacing: 0;
-  text-shadow: 0 0 2px rgba(106,122,106,0.5);
 }
 .term-sub {
   color: var(--t-dim);
@@ -144,7 +142,6 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   letter-spacing: 0.04em;
   text-transform: uppercase;
   caret-color: var(--t-amber);
-  text-shadow: 0 0 1px rgba(0,255,102,0.5);
 }
 .term-input::placeholder { color: var(--t-dim); text-transform: uppercase; }
 .term-input::selection { background: var(--t-amber); color: #000; }
@@ -279,7 +276,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   font-size: 11.5px;
   line-height: 1.45;
 }
-.term-news-item:hover { background: rgba(0,255,102,0.05); }
+.term-news-item:hover { background: rgba(255,255,255,0.05); }
 .term-news-row1 {
   display: flex;
   justify-content: space-between;
@@ -321,7 +318,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
 .term-tbl th.num, .term-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .term-tbl td {
   padding: 3px 6px;
-  border-bottom: 1px dashed rgba(40,60,40,0.6);
+  border-bottom: 1px dashed rgba(60,60,60,0.6);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -330,7 +327,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
 .term-tbl td.name { color: var(--t-green); }
 .term-tbl td.up { color: var(--t-green); }
 .term-tbl td.dn { color: var(--t-red); }
-.term-tbl tr:hover { background: rgba(0,255,102,0.04); }
+.term-tbl tr:hover { background: rgba(255,255,255,0.04); }
 
 .term-spark { display: inline-block; width: 70px; height: 18px; vertical-align: middle; }
 
