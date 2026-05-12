@@ -12,6 +12,7 @@
   --t-blue-d:    #3878a8;
   --t-cyan:      #00e0e0;
   --t-yellow:    #ffe000;
+  --t-text:      #e8e8e8;
   --t-dim:       #707070;
   --t-mute:      #232323;
   --t-line:      #1a1a1a;
@@ -209,10 +210,10 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   color: var(--t-amber);
   margin-bottom: 4px;
 }
-.term-output .out-body { color: var(--t-green); }
+.term-output .out-body { color: var(--t-text); }
 .term-output .out-err { color: var(--t-red); }
 .term-output .out-key { color: var(--t-dim); }
-.term-output .out-val { color: var(--t-green); }
+.term-output .out-val { color: var(--t-text); }
 .term-output .out-val-up { color: var(--t-green); }
 .term-output .out-val-dn { color: var(--t-red); }
 .term-output .out-divider { color: var(--t-mute); }
@@ -285,7 +286,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
 }
 .term-news-cat { color: var(--t-amber); }
 .term-news-time { color: var(--t-dim); }
-.term-news-title { color: var(--t-green); margin: 2px 0; }
+.term-news-title { color: var(--t-text); margin: 2px 0; font-weight: 500; }
 .term-news-sum { color: var(--t-dim); font-size: 11px; }
 .term-news-by { color: var(--t-blue); font-size: 10px; letter-spacing: 0.05em; }
 .term-news-read { color: var(--t-cyan); }
@@ -323,10 +324,13 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.term-tbl td { color: var(--t-text); }
 .term-tbl td.sym { color: var(--t-amber); font-weight: 700; }
-.term-tbl td.name { color: var(--t-green); }
-.term-tbl td.up { color: var(--t-green); }
+.term-tbl td.name { color: var(--t-text); }
+.term-tbl td.up { color: var(--t-green); }    /* only directional cells get color */
 .term-tbl td.dn { color: var(--t-red); }
+.term-tbl td.t-dim { color: var(--t-dim); }
+.term-tbl td.t-green { color: var(--t-text); }   /* volume isn't bullish — keep white */
 .term-tbl tr:hover { background: rgba(255,255,255,0.04); }
 
 .term-spark { display: inline-block; width: 70px; height: 18px; vertical-align: middle; }
@@ -355,7 +359,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   to   { transform: translateX(-100%); }
 }
 .tk-sym  { color: var(--t-amber); font-weight: 700; padding: 0 4px 0 18px; }
-.tk-px   { color: var(--t-green); padding: 0 4px; }
+.tk-px   { color: var(--t-text); padding: 0 4px; }
 .tk-up   { color: var(--t-green); }
 .tk-dn   { color: var(--t-red); }
 .tk-bar  { color: var(--t-mute); padding: 0 6px; }

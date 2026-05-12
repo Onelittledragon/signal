@@ -265,9 +265,9 @@
         ${cell(q?.last, fmtPrice, cls === 't-dim' ? 't-dim' : '')}
         ${cell(q?.chg,  fmtChg,   cls)}
         ${cell(pct,     fmtPct,   cls)}
-        ${cell(q?.vol,  fmtVol,   't-green')}
-        ${cell(q?.high, fmtPrice, 'up')}
-        ${cell(q?.low,  fmtPrice, 'dn')}
+        ${cell(q?.vol,  fmtVol,   '')}
+        ${cell(q?.high, fmtPrice, '')}
+        ${cell(q?.low,  fmtPrice, '')}
         <td class="num">${sparkSvg}</td>
       </tr>`);
     }
