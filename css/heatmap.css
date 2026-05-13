@@ -124,6 +124,16 @@ body.heatmap-mode .header {
 }
 .hm-tile-grid:hover { filter: brightness(1.15); z-index: 2; }
 .hm-tile-grid:focus-visible { box-shadow: inset 0 0 0 2px #ffb000; }
+.hm-tg-logo {
+  display: block;
+  object-fit: contain;
+  margin-bottom: 4px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 4px;
+  padding: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
 .hm-tg-sym { font-weight: 700; font-size: 16px; letter-spacing: 0.04em; }
 .hm-tg-sym.sm { font-size: 11px; letter-spacing: 0.02em; }
 .hm-tg-sym.tiny { font-size: 9px; letter-spacing: 0; }

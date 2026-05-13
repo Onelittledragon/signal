@@ -8,99 +8,99 @@
   // from the SignalMarket cache so values stay current.
   const STOCKS = [
     // Technology
-    { sym:'AAPL',  name:'Apple',           sector:'Technology', mcap:3500 },
-    { sym:'MSFT',  name:'Microsoft',       sector:'Technology', mcap:3200 },
-    { sym:'NVDA',  name:'NVIDIA',          sector:'Technology', mcap:3300 },
-    { sym:'AVGO',  name:'Broadcom',        sector:'Technology', mcap:780 },
-    { sym:'ORCL',  name:'Oracle',          sector:'Technology', mcap:480 },
-    { sym:'CRM',   name:'Salesforce',      sector:'Technology', mcap:290 },
-    { sym:'ADBE',  name:'Adobe',           sector:'Technology', mcap:230 },
-    { sym:'AMD',   name:'AMD',             sector:'Technology', mcap:230 },
-    { sym:'CSCO',  name:'Cisco',           sector:'Technology', mcap:230 },
-    { sym:'ACN',   name:'Accenture',       sector:'Technology', mcap:200 },
-    { sym:'NOW',   name:'ServiceNow',      sector:'Technology', mcap:200 },
-    { sym:'IBM',   name:'IBM',             sector:'Technology', mcap:200 },
-    { sym:'QCOM',  name:'Qualcomm',        sector:'Technology', mcap:180 },
-    { sym:'INTU',  name:'Intuit',          sector:'Technology', mcap:175 },
-    { sym:'TXN',   name:'Texas Instr.',    sector:'Technology', mcap:175 },
-    { sym:'AMAT',  name:'Applied Mat.',    sector:'Technology', mcap:160 },
-    { sym:'MU',    name:'Micron',          sector:'Technology', mcap:140 },
-    { sym:'INTC',  name:'Intel',           sector:'Technology', mcap:130 },
-    { sym:'PANW',  name:'Palo Alto',       sector:'Technology', mcap:130 },
-    { sym:'ANET',  name:'Arista',          sector:'Technology', mcap:130 },
+    { sym:'AAPL',  name:'Apple',           sector:'Technology', mcap:3500, domain:'apple.com' },
+    { sym:'MSFT',  name:'Microsoft',       sector:'Technology', mcap:3200, domain:'microsoft.com' },
+    { sym:'NVDA',  name:'NVIDIA',          sector:'Technology', mcap:3300, domain:'nvidia.com' },
+    { sym:'AVGO',  name:'Broadcom',        sector:'Technology', mcap:780,  domain:'broadcom.com' },
+    { sym:'ORCL',  name:'Oracle',          sector:'Technology', mcap:480,  domain:'oracle.com' },
+    { sym:'CRM',   name:'Salesforce',      sector:'Technology', mcap:290,  domain:'salesforce.com' },
+    { sym:'ADBE',  name:'Adobe',           sector:'Technology', mcap:230,  domain:'adobe.com' },
+    { sym:'AMD',   name:'AMD',             sector:'Technology', mcap:230,  domain:'amd.com' },
+    { sym:'CSCO',  name:'Cisco',           sector:'Technology', mcap:230,  domain:'cisco.com' },
+    { sym:'ACN',   name:'Accenture',       sector:'Technology', mcap:200,  domain:'accenture.com' },
+    { sym:'NOW',   name:'ServiceNow',      sector:'Technology', mcap:200,  domain:'servicenow.com' },
+    { sym:'IBM',   name:'IBM',             sector:'Technology', mcap:200,  domain:'ibm.com' },
+    { sym:'QCOM',  name:'Qualcomm',        sector:'Technology', mcap:180,  domain:'qualcomm.com' },
+    { sym:'INTU',  name:'Intuit',          sector:'Technology', mcap:175,  domain:'intuit.com' },
+    { sym:'TXN',   name:'Texas Instr.',    sector:'Technology', mcap:175,  domain:'ti.com' },
+    { sym:'AMAT',  name:'Applied Mat.',    sector:'Technology', mcap:160,  domain:'appliedmaterials.com' },
+    { sym:'MU',    name:'Micron',          sector:'Technology', mcap:140,  domain:'micron.com' },
+    { sym:'INTC',  name:'Intel',           sector:'Technology', mcap:130,  domain:'intel.com' },
+    { sym:'PANW',  name:'Palo Alto',       sector:'Technology', mcap:130,  domain:'paloaltonetworks.com' },
+    { sym:'ANET',  name:'Arista',          sector:'Technology', mcap:130,  domain:'arista.com' },
     // Communications
-    { sym:'GOOGL', name:'Alphabet',        sector:'Communications', mcap:2100 },
-    { sym:'META',  name:'Meta',            sector:'Communications', mcap:1500 },
-    { sym:'NFLX',  name:'Netflix',         sector:'Communications', mcap:300 },
-    { sym:'TMUS',  name:'T-Mobile',        sector:'Communications', mcap:240 },
-    { sym:'DIS',   name:'Disney',          sector:'Communications', mcap:180 },
-    { sym:'VZ',    name:'Verizon',         sector:'Communications', mcap:170 },
-    { sym:'CMCSA', name:'Comcast',         sector:'Communications', mcap:170 },
-    { sym:'T',     name:'AT&T',            sector:'Communications', mcap:140 },
+    { sym:'GOOGL', name:'Alphabet',        sector:'Communications', mcap:2100, domain:'google.com' },
+    { sym:'META',  name:'Meta',            sector:'Communications', mcap:1500, domain:'meta.com' },
+    { sym:'NFLX',  name:'Netflix',         sector:'Communications', mcap:300,  domain:'netflix.com' },
+    { sym:'TMUS',  name:'T-Mobile',        sector:'Communications', mcap:240,  domain:'t-mobile.com' },
+    { sym:'DIS',   name:'Disney',          sector:'Communications', mcap:180,  domain:'disney.com' },
+    { sym:'VZ',    name:'Verizon',         sector:'Communications', mcap:170,  domain:'verizon.com' },
+    { sym:'CMCSA', name:'Comcast',         sector:'Communications', mcap:170,  domain:'comcast.com' },
+    { sym:'T',     name:'AT&T',            sector:'Communications', mcap:140,  domain:'att.com' },
     // Consumer Discretionary
-    { sym:'AMZN',  name:'Amazon',          sector:'Consumer Disc.', mcap:2000 },
-    { sym:'TSLA',  name:'Tesla',           sector:'Consumer Disc.', mcap:900 },
-    { sym:'HD',    name:'Home Depot',      sector:'Consumer Disc.', mcap:400 },
-    { sym:'MCD',   name:'McDonald’s', sector:'Consumer Disc.', mcap:210 },
-    { sym:'BKNG',  name:'Booking',         sector:'Consumer Disc.', mcap:160 },
-    { sym:'LOW',   name:'Lowe’s',     sector:'Consumer Disc.', mcap:140 },
-    { sym:'TJX',   name:'TJX',             sector:'Consumer Disc.', mcap:140 },
-    { sym:'NKE',   name:'Nike',            sector:'Consumer Disc.', mcap:120 },
-    { sym:'SBUX',  name:'Starbucks',       sector:'Consumer Disc.', mcap:100 },
+    { sym:'AMZN',  name:'Amazon',          sector:'Consumer Disc.', mcap:2000, domain:'amazon.com' },
+    { sym:'TSLA',  name:'Tesla',           sector:'Consumer Disc.', mcap:900,  domain:'tesla.com' },
+    { sym:'HD',    name:'Home Depot',      sector:'Consumer Disc.', mcap:400,  domain:'homedepot.com' },
+    { sym:'MCD',   name:'McDonald’s',      sector:'Consumer Disc.', mcap:210,  domain:'mcdonalds.com' },
+    { sym:'BKNG',  name:'Booking',         sector:'Consumer Disc.', mcap:160,  domain:'booking.com' },
+    { sym:'LOW',   name:'Lowe’s',          sector:'Consumer Disc.', mcap:140,  domain:'lowes.com' },
+    { sym:'TJX',   name:'TJX',             sector:'Consumer Disc.', mcap:140,  domain:'tjx.com' },
+    { sym:'NKE',   name:'Nike',            sector:'Consumer Disc.', mcap:120,  domain:'nike.com' },
+    { sym:'SBUX',  name:'Starbucks',       sector:'Consumer Disc.', mcap:100,  domain:'starbucks.com' },
     // Financials
-    { sym:'JPM',   name:'JPMorgan',        sector:'Financials', mcap:700 },
-    { sym:'V',     name:'Visa',            sector:'Financials', mcap:580 },
-    { sym:'MA',    name:'Mastercard',      sector:'Financials', mcap:470 },
-    { sym:'BAC',   name:'Bank of America', sector:'Financials', mcap:340 },
-    { sym:'WFC',   name:'Wells Fargo',     sector:'Financials', mcap:240 },
-    { sym:'AXP',   name:'American Express',sector:'Financials', mcap:200 },
-    { sym:'MS',    name:'Morgan Stanley',  sector:'Financials', mcap:180 },
-    { sym:'GS',    name:'Goldman Sachs',   sector:'Financials', mcap:170 },
-    { sym:'SPGI',  name:'S&P Global',      sector:'Financials', mcap:150 },
-    { sym:'BLK',   name:'BlackRock',       sector:'Financials', mcap:150 },
-    { sym:'SCHW',  name:'Schwab',          sector:'Financials', mcap:140 },
-    { sym:'C',     name:'Citigroup',       sector:'Financials', mcap:130 },
+    { sym:'JPM',   name:'JPMorgan',        sector:'Financials', mcap:700, domain:'jpmorganchase.com' },
+    { sym:'V',     name:'Visa',            sector:'Financials', mcap:580, domain:'visa.com' },
+    { sym:'MA',    name:'Mastercard',      sector:'Financials', mcap:470, domain:'mastercard.com' },
+    { sym:'BAC',   name:'Bank of America', sector:'Financials', mcap:340, domain:'bankofamerica.com' },
+    { sym:'WFC',   name:'Wells Fargo',     sector:'Financials', mcap:240, domain:'wellsfargo.com' },
+    { sym:'AXP',   name:'American Express',sector:'Financials', mcap:200, domain:'americanexpress.com' },
+    { sym:'MS',    name:'Morgan Stanley',  sector:'Financials', mcap:180, domain:'morganstanley.com' },
+    { sym:'GS',    name:'Goldman Sachs',   sector:'Financials', mcap:170, domain:'goldmansachs.com' },
+    { sym:'SPGI',  name:'S&P Global',      sector:'Financials', mcap:150, domain:'spglobal.com' },
+    { sym:'BLK',   name:'BlackRock',       sector:'Financials', mcap:150, domain:'blackrock.com' },
+    { sym:'SCHW',  name:'Schwab',          sector:'Financials', mcap:140, domain:'schwab.com' },
+    { sym:'C',     name:'Citigroup',       sector:'Financials', mcap:130, domain:'citigroup.com' },
     // Healthcare
-    { sym:'LLY',   name:'Eli Lilly',       sector:'Healthcare', mcap:700 },
-    { sym:'UNH',   name:'UnitedHealth',    sector:'Healthcare', mcap:520 },
-    { sym:'JNJ',   name:'J&J',             sector:'Healthcare', mcap:380 },
-    { sym:'ABBV',  name:'AbbVie',          sector:'Healthcare', mcap:310 },
-    { sym:'MRK',   name:'Merck',           sector:'Healthcare', mcap:260 },
-    { sym:'TMO',   name:'Thermo Fisher',   sector:'Healthcare', mcap:210 },
-    { sym:'ABT',   name:'Abbott',          sector:'Healthcare', mcap:200 },
-    { sym:'DHR',   name:'Danaher',         sector:'Healthcare', mcap:180 },
-    { sym:'ISRG',  name:'Intuitive',       sector:'Healthcare', mcap:170 },
-    { sym:'AMGN',  name:'Amgen',           sector:'Healthcare', mcap:170 },
-    { sym:'PFE',   name:'Pfizer',          sector:'Healthcare', mcap:170 },
-    { sym:'BMY',   name:'Bristol-Myers',   sector:'Healthcare', mcap:120 },
+    { sym:'LLY',   name:'Eli Lilly',       sector:'Healthcare', mcap:700, domain:'lilly.com' },
+    { sym:'UNH',   name:'UnitedHealth',    sector:'Healthcare', mcap:520, domain:'unitedhealthgroup.com' },
+    { sym:'JNJ',   name:'J&J',             sector:'Healthcare', mcap:380, domain:'jnj.com' },
+    { sym:'ABBV',  name:'AbbVie',          sector:'Healthcare', mcap:310, domain:'abbvie.com' },
+    { sym:'MRK',   name:'Merck',           sector:'Healthcare', mcap:260, domain:'merck.com' },
+    { sym:'TMO',   name:'Thermo Fisher',   sector:'Healthcare', mcap:210, domain:'thermofisher.com' },
+    { sym:'ABT',   name:'Abbott',          sector:'Healthcare', mcap:200, domain:'abbott.com' },
+    { sym:'DHR',   name:'Danaher',         sector:'Healthcare', mcap:180, domain:'danaher.com' },
+    { sym:'ISRG',  name:'Intuitive',       sector:'Healthcare', mcap:170, domain:'intuitive.com' },
+    { sym:'AMGN',  name:'Amgen',           sector:'Healthcare', mcap:170, domain:'amgen.com' },
+    { sym:'PFE',   name:'Pfizer',          sector:'Healthcare', mcap:170, domain:'pfizer.com' },
+    { sym:'BMY',   name:'Bristol-Myers',   sector:'Healthcare', mcap:120, domain:'bms.com' },
     // Staples
-    { sym:'WMT',   name:'Walmart',         sector:'Staples', mcap:540 },
-    { sym:'COST',  name:'Costco',          sector:'Staples', mcap:400 },
-    { sym:'PG',    name:'P&G',             sector:'Staples', mcap:380 },
-    { sym:'KO',    name:'Coca-Cola',       sector:'Staples', mcap:290 },
-    { sym:'PEP',   name:'Pepsi',           sector:'Staples', mcap:230 },
-    { sym:'PM',    name:'Philip Morris',   sector:'Staples', mcap:170 },
-    { sym:'MO',    name:'Altria',          sector:'Staples', mcap:90 },
+    { sym:'WMT',   name:'Walmart',         sector:'Staples', mcap:540, domain:'walmart.com' },
+    { sym:'COST',  name:'Costco',          sector:'Staples', mcap:400, domain:'costco.com' },
+    { sym:'PG',    name:'P&G',             sector:'Staples', mcap:380, domain:'pg.com' },
+    { sym:'KO',    name:'Coca-Cola',       sector:'Staples', mcap:290, domain:'coca-cola.com' },
+    { sym:'PEP',   name:'Pepsi',           sector:'Staples', mcap:230, domain:'pepsico.com' },
+    { sym:'PM',    name:'Philip Morris',   sector:'Staples', mcap:170, domain:'pmi.com' },
+    { sym:'MO',    name:'Altria',          sector:'Staples', mcap:90,  domain:'altria.com' },
     // Energy
-    { sym:'XOM',   name:'Exxon Mobil',     sector:'Energy', mcap:480 },
-    { sym:'CVX',   name:'Chevron',         sector:'Energy', mcap:280 },
-    { sym:'COP',   name:'ConocoPhillips',  sector:'Energy', mcap:130 },
+    { sym:'XOM',   name:'Exxon Mobil',     sector:'Energy', mcap:480, domain:'exxonmobil.com' },
+    { sym:'CVX',   name:'Chevron',         sector:'Energy', mcap:280, domain:'chevron.com' },
+    { sym:'COP',   name:'ConocoPhillips',  sector:'Energy', mcap:130, domain:'conocophillips.com' },
     // Industrials
-    { sym:'GE',    name:'GE Aerospace',    sector:'Industrials', mcap:200 },
-    { sym:'CAT',   name:'Caterpillar',     sector:'Industrials', mcap:175 },
-    { sym:'RTX',   name:'RTX',             sector:'Industrials', mcap:170 },
-    { sym:'UNP',   name:'Union Pacific',   sector:'Industrials', mcap:150 },
-    { sym:'HON',   name:'Honeywell',       sector:'Industrials', mcap:140 },
-    { sym:'LMT',   name:'Lockheed',        sector:'Industrials', mcap:130 },
-    { sym:'BA',    name:'Boeing',          sector:'Industrials', mcap:120 },
-    { sym:'UPS',   name:'UPS',             sector:'Industrials', mcap:120 },
+    { sym:'GE',    name:'GE Aerospace',    sector:'Industrials', mcap:200, domain:'geaerospace.com' },
+    { sym:'CAT',   name:'Caterpillar',     sector:'Industrials', mcap:175, domain:'caterpillar.com' },
+    { sym:'RTX',   name:'RTX',             sector:'Industrials', mcap:170, domain:'rtx.com' },
+    { sym:'UNP',   name:'Union Pacific',   sector:'Industrials', mcap:150, domain:'up.com' },
+    { sym:'HON',   name:'Honeywell',       sector:'Industrials', mcap:140, domain:'honeywell.com' },
+    { sym:'LMT',   name:'Lockheed',        sector:'Industrials', mcap:130, domain:'lockheedmartin.com' },
+    { sym:'BA',    name:'Boeing',          sector:'Industrials', mcap:120, domain:'boeing.com' },
+    { sym:'UPS',   name:'UPS',             sector:'Industrials', mcap:120, domain:'ups.com' },
     // Materials / Utilities / Real Estate
-    { sym:'LIN',   name:'Linde',           sector:'Materials', mcap:220 },
-    { sym:'SHW',   name:'Sherwin-Wms',     sector:'Materials', mcap:90 },
-    { sym:'NEE',   name:'NextEra',         sector:'Utilities', mcap:160 },
-    { sym:'SO',    name:'Southern Co',     sector:'Utilities', mcap:100 },
-    { sym:'PLD',   name:'Prologis',        sector:'Real Estate', mcap:120 },
-    { sym:'AMT',   name:'American Tower',  sector:'Real Estate', mcap:100 },
+    { sym:'LIN',   name:'Linde',           sector:'Materials',   mcap:220, domain:'linde.com' },
+    { sym:'SHW',   name:'Sherwin-Wms',     sector:'Materials',   mcap:90,  domain:'sherwin-williams.com' },
+    { sym:'NEE',   name:'NextEra',         sector:'Utilities',   mcap:160, domain:'nexteraenergy.com' },
+    { sym:'SO',    name:'Southern Co',     sector:'Utilities',   mcap:100, domain:'southerncompany.com' },
+    { sym:'PLD',   name:'Prologis',        sector:'Real Estate', mcap:120, domain:'prologis.com' },
+    { sym:'AMT',   name:'American Tower',  sector:'Real Estate', mcap:100, domain:'americantower.com' },
   ];
 
   const SECTOR_ORDER = [
@@ -220,11 +220,25 @@
         tile.dataset.sym = d.sym;
         tile.style.cssText = `left:${lx}px;top:${ly}px;width:${lw}px;height:${lh}px;background:${bg};color:${fg};`;
 
-        // Density depends on tile size — drop the % line on tiny squares
+        // Density depends on tile size:
+        //   tiny → ticker only
+        //   small/medium → ticker + %
+        //   large enough → logo + ticker + %
         const showPct = lh >= 28 && lw >= 36;
         const big = lw >= 90 && lh >= 60;
+        const showLogo = lw >= 70 && lh >= 70 && d.domain;
+        const logoSize = lh >= 110 && lw >= 110 ? 38 : 28;
+        // Clearbit's free logo endpoint was deprecated; Google's s2 favicon
+        // service is the most reliable in-browser replacement. Fall back to
+        // DuckDuckGo's icon service, then drop the img entirely if both fail.
+        const logoHtml = showLogo
+          ? `<img class="hm-tg-logo" alt="" width="${logoSize}" height="${logoSize}" loading="lazy" referrerpolicy="no-referrer"
+                  src="https://www.google.com/s2/favicons?domain=${esc(d.domain)}&sz=64"
+                  data-fallback="https://icons.duckduckgo.com/ip3/${esc(d.domain)}.ico"
+                  onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}"/>`
+          : '';
         tile.innerHTML = big
-          ? `<div class="hm-tg-sym">${esc(d.sym)}</div><div class="hm-tg-pct">${esc(fmtPct(pct))}</div>`
+          ? `${logoHtml}<div class="hm-tg-sym">${esc(d.sym)}</div><div class="hm-tg-pct">${esc(fmtPct(pct))}</div>`
           : showPct
             ? `<div class="hm-tg-sym sm">${esc(d.sym)}</div><div class="hm-tg-pct sm">${esc(fmtPct(pct))}</div>`
             : `<div class="hm-tg-sym tiny">${esc(d.sym)}</div>`;
