@@ -80,6 +80,56 @@ body.heatmap-mode .header {
   background: #000;
   overflow: hidden;
   font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  cursor: zoom-in;
+  touch-action: none; /* let the pinch/drag handler own gestures */
+}
+.hm-treemap.is-zoomed { cursor: grab; }
+.hm-treemap.is-zoomed:active { cursor: grabbing; }
+
+.hm-tm-stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* Zoom toolbar */
+.hm-zoom-ui {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #1f1f1f;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  z-index: 30;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.hm-zoom-btn {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #d8d8d8;
+  width: 26px; height: 26px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.hm-zoom-btn:hover { background: rgba(25,210,122,0.12); border-color: #19d27a; color: #19d27a; }
+.hm-zoom-lvl {
+  color: #ffb000; font-size: 10.5px; letter-spacing: 0.1em;
+  min-width: 36px; text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Sector header bar above each group */
@@ -127,13 +177,21 @@ body.heatmap-mode .header {
 .hm-tg-logo {
   display: block;
   object-fit: contain;
-  margin-bottom: 4px;
-  background: rgba(255,255,255,0.95);
+  margin-bottom: 3px;
+  flex-shrink: 0;
+  /* Favicons come in every colour scheme — give them a subtle light pill
+     so monochrome-white marks (NFLX, WMT, JPM, MA) stay visible against
+     the green/red tile colour, without crushing the brand colour of
+     full-colour logos. */
+  background: rgba(245,245,245,0.92);
   border-radius: 4px;
   padding: 2px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
 }
+.hm-tile-grid:has(.hm-tg-logo[width="14"]) { padding: 2px; }
+.hm-tile-grid:has(.hm-tg-logo[width="14"]) .hm-tg-logo { margin-bottom: 1px; padding: 1px; border-radius: 3px; }
+.hm-tile-grid:has(.hm-tg-logo[width="18"]) { padding: 2px 3px; }
+.hm-tile-grid:has(.hm-tg-logo[width="18"]) .hm-tg-logo { margin-bottom: 2px; }
 .hm-tg-sym { font-weight: 700; font-size: 16px; letter-spacing: 0.04em; }
 .hm-tg-sym.sm { font-size: 11px; letter-spacing: 0.02em; }
 .hm-tg-sym.tiny { font-size: 9px; letter-spacing: 0; }

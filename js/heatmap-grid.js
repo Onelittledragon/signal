@@ -163,17 +163,27 @@
   }
 
   // --------- render ---------
-  let container, popup, ro, queued = false;
+  let container, stage, popup, ro, queued = false;
+  // Zoom / pan state. zoom is the linear scale; pan offsets are in CSS px
+  // measured in viewport coordinates. The treemap is laid out at a virtual
+  // size of (viewport * zoom) and the stage is then translated by pan.
+  let zoom = 1, panX = 0, panY = 0;
+  const ZOOM_MIN = 1, ZOOM_MAX = 6;
 
   function getQuote(sym) {
     return window.SignalMarket?.state?.quotes?.get(sym) || null;
   }
 
   function build() {
-    if (!container) return;
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    if (!w || !h || typeof d3 === 'undefined') return;
+    if (!container || !stage) return;
+    const vw = container.clientWidth;
+    const vh = container.clientHeight;
+    if (!vw || !vh || typeof d3 === 'undefined') return;
+
+    // Treemap is laid out at the zoomed virtual size; the stage is then
+    // translated to expose the right slice in the viewport.
+    const w = Math.round(vw * zoom);
+    const h = Math.round(vh * zoom);
 
     // Group stocks by sector preserving SECTOR_ORDER, drop empty sectors.
     const grouped = SECTOR_ORDER
@@ -184,7 +194,7 @@
       .sum(d => d.mcap || 0)
       .sort((a, b) => (b.value || 0) - (a.value || 0));
 
-    const HEADER = 18;
+    const HEADER = Math.max(16, Math.min(28, Math.round(18 * Math.sqrt(zoom))));
     d3.treemap()
       .tile(d3.treemapSquarify.ratio(1))
       .size([w, h])
@@ -220,34 +230,52 @@
         tile.dataset.sym = d.sym;
         tile.style.cssText = `left:${lx}px;top:${ly}px;width:${lw}px;height:${lh}px;background:${bg};color:${fg};`;
 
-        // Density depends on tile size:
-        //   tiny → ticker only
-        //   small/medium → ticker + %
-        //   large enough → logo + ticker + %
-        const showPct = lh >= 28 && lw >= 36;
-        const big = lw >= 90 && lh >= 60;
-        const showLogo = lw >= 70 && lh >= 70 && d.domain;
-        const logoSize = lh >= 110 && lw >= 110 ? 38 : 28;
-        // Clearbit's free logo endpoint was deprecated; Google's s2 favicon
-        // service is the most reliable in-browser replacement. Fall back to
-        // DuckDuckGo's icon service, then drop the img entirely if both fail.
+        // Density scales with tile size. Logo shows on every tile that has
+        // a sane minimum area (~20px); text below it appears once we have
+        // room for it. Clearbit's free logo endpoint was deprecated by
+        // HubSpot, so we use Google's s2 favicon as primary and DuckDuckGo
+        // as the on-error fallback before finally dropping the image.
+        const hasLogo = !!d.domain;
+        const logoSize =
+          lh >= 110 && lw >= 110 ? 40 :
+          lh >= 70  && lw >= 70  ? 28 :
+          lh >= 44  && lw >= 44  ? 18 :
+          14;
+        const showLogo = hasLogo && lw >= (logoSize + 6) && lh >= (logoSize + 6);
+        const big = lw >= 88 && lh >= 70;
+        const mid = lw >= 50 && lh >= 36;
+        const showPct = lw >= 38 && lh >= 30;
+
         const logoHtml = showLogo
           ? `<img class="hm-tg-logo" alt="" width="${logoSize}" height="${logoSize}" loading="lazy" referrerpolicy="no-referrer"
                   src="https://www.google.com/s2/favicons?domain=${esc(d.domain)}&sz=64"
                   data-fallback="https://icons.duckduckgo.com/ip3/${esc(d.domain)}.ico"
                   onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.remove();}"/>`
           : '';
-        tile.innerHTML = big
-          ? `${logoHtml}<div class="hm-tg-sym">${esc(d.sym)}</div><div class="hm-tg-pct">${esc(fmtPct(pct))}</div>`
-          : showPct
-            ? `<div class="hm-tg-sym sm">${esc(d.sym)}</div><div class="hm-tg-pct sm">${esc(fmtPct(pct))}</div>`
-            : `<div class="hm-tg-sym tiny">${esc(d.sym)}</div>`;
+
+        if (big) {
+          tile.innerHTML = `${logoHtml}<div class="hm-tg-sym">${esc(d.sym)}</div><div class="hm-tg-pct">${esc(fmtPct(pct))}</div>`;
+        } else if (mid) {
+          tile.innerHTML = `${logoHtml}<div class="hm-tg-sym sm">${esc(d.sym)}</div><div class="hm-tg-pct sm">${esc(fmtPct(pct))}</div>`;
+        } else if (showPct) {
+          // Very small: logo (if it fits) + ticker only.
+          tile.innerHTML = `${logoHtml}<div class="hm-tg-sym tiny">${esc(d.sym)}</div>`;
+        } else if (showLogo) {
+          // Ribbon-thin tile: show just the logo as the identifier.
+          tile.innerHTML = logoHtml;
+        } else {
+          tile.innerHTML = `<div class="hm-tg-sym tiny">${esc(d.sym)}</div>`;
+        }
         frag.appendChild(tile);
       }
     }
 
-    // Atomic swap.
-    container.replaceChildren(frag);
+    // Atomic swap into the inner stage; outer container scrolls/clips.
+    stage.style.width  = w + 'px';
+    stage.style.height = h + 'px';
+    stage.style.transform = `translate3d(${panX}px, ${panY}px, 0)`;
+    stage.replaceChildren(frag);
+    updateZoomUi();
 
     // Update last-tick stamp in the top bar.
     const ts = window.SignalMarket?.state?.lastUpdate;
@@ -261,6 +289,146 @@
     if (queued) return;
     queued = true;
     requestAnimationFrame(() => { queued = false; build(); });
+  }
+
+  // --------- zoom / pan ---------
+  function clampPan() {
+    if (!container) return;
+    const vw = container.clientWidth, vh = container.clientHeight;
+    const minX = vw - vw * zoom; // negative when zoom > 1
+    const minY = vh - vh * zoom;
+    panX = Math.max(minX, Math.min(0, panX));
+    panY = Math.max(minY, Math.min(0, panY));
+  }
+  function setZoom(newZoom, anchorX, anchorY) {
+    const nz = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom));
+    if (nz === zoom) return;
+    const vw = container.clientWidth, vh = container.clientHeight;
+    const ax = anchorX == null ? vw / 2 : anchorX;
+    const ay = anchorY == null ? vh / 2 : anchorY;
+    // Keep the heatmap point under (ax, ay) stationary across the zoom.
+    panX = ax - (ax - panX) * (nz / zoom);
+    panY = ay - (ay - panY) * (nz / zoom);
+    zoom = nz;
+    clampPan();
+    schedule();
+  }
+  function resetZoom() {
+    zoom = 1; panX = 0; panY = 0;
+    schedule();
+  }
+  function updateZoomUi() {
+    const lvl = document.getElementById('hm-zoom-level');
+    if (lvl) lvl.textContent = `${zoom.toFixed(1)}×`;
+    if (container) {
+      container.classList.toggle('is-zoomed', zoom > 1.01);
+    }
+  }
+
+  const activePointers = new Map();
+  function bindZoom() {
+    if (!container) return;
+    // Wheel — zoom around cursor. Trackpad pinches arrive as ctrlKey wheel.
+    container.addEventListener('wheel', (ev) => {
+      if (ev.target.closest('.hm-detail')) return;
+      ev.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const ax = ev.clientX - rect.left;
+      const ay = ev.clientY - rect.top;
+      const factor = Math.exp(-ev.deltaY * 0.0025);
+      setZoom(zoom * factor, ax, ay);
+    }, { passive: false });
+
+    // Double-click — zoom in toward the cursor.
+    container.addEventListener('dblclick', (ev) => {
+      if (ev.target.closest('.hm-detail')) return;
+      const rect = container.getBoundingClientRect();
+      const ax = ev.clientX - rect.left;
+      const ay = ev.clientY - rect.top;
+      setZoom(zoom < ZOOM_MAX ? zoom * 1.8 : ZOOM_MIN, ax, ay);
+    });
+
+    // Drag-to-pan when zoomed (mouse or single-finger touch). We move
+    // the live transform on the stage during the drag to keep it cheap,
+    // then commit the pan on pointerup.
+    let dragging = false, startX = 0, startY = 0, basePanX = 0, basePanY = 0, moved = 0;
+    container.addEventListener('pointerdown', (ev) => {
+      if (zoom <= 1.01) return;
+      if (ev.target.closest('.hm-detail')) return;
+      // Multi-touch is handled by the pinch listener below.
+      if (activePointers.size >= 1 && ev.pointerType === 'touch') return;
+      dragging = true; moved = 0;
+      startX = ev.clientX; startY = ev.clientY;
+      basePanX = panX; basePanY = panY;
+      container.setPointerCapture(ev.pointerId);
+    });
+    container.addEventListener('pointermove', (ev) => {
+      if (!dragging) return;
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      moved = Math.max(moved, Math.hypot(dx, dy));
+      panX = basePanX + dx;
+      panY = basePanY + dy;
+      clampPan();
+      stage.style.transform = `translate3d(${panX}px, ${panY}px, 0)`;
+    });
+    const endDrag = (ev) => {
+      if (!dragging) return;
+      dragging = false;
+      try { container.releasePointerCapture(ev.pointerId); } catch {}
+    };
+    container.addEventListener('pointerup', endDrag);
+    container.addEventListener('pointercancel', endDrag);
+    // Suppress click-to-detail if the user actually dragged.
+    container.addEventListener('click', (ev) => {
+      if (moved > 6) { ev.stopPropagation(); moved = 0; }
+    }, true);
+
+    // Touch pinch — track two pointers and scale around their midpoint.
+    let pinchStartDist = 0, pinchStartZoom = 1;
+    function pinchPoints() {
+      const pts = Array.from(activePointers.values());
+      return pts.slice(0, 2);
+    }
+    container.addEventListener('pointerdown', (ev) => {
+      if (ev.pointerType !== 'touch') return;
+      activePointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (activePointers.size === 2) {
+        dragging = false;
+        const [a, b] = pinchPoints();
+        pinchStartDist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        pinchStartZoom = zoom;
+      }
+    });
+    container.addEventListener('pointermove', (ev) => {
+      if (ev.pointerType !== 'touch') return;
+      if (!activePointers.has(ev.pointerId)) return;
+      activePointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (activePointers.size >= 2) {
+        const [a, b] = pinchPoints();
+        const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        const rect = container.getBoundingClientRect();
+        const mx = (a.x + b.x) / 2 - rect.left;
+        const my = (a.y + b.y) / 2 - rect.top;
+        setZoom(pinchStartZoom * (dist / pinchStartDist), mx, my);
+      }
+    });
+    const dropPointer = (ev) => {
+      if (ev.pointerType !== 'touch') return;
+      activePointers.delete(ev.pointerId);
+    };
+    container.addEventListener('pointerup', dropPointer);
+    container.addEventListener('pointercancel', dropPointer);
+
+    // Safari iOS gesture events as a belt-and-braces fallback.
+    let gestStart = 1;
+    container.addEventListener('gesturestart', (ev) => { ev.preventDefault(); gestStart = zoom; });
+    container.addEventListener('gesturechange', (ev) => {
+      ev.preventDefault();
+      const rect = container.getBoundingClientRect();
+      setZoom(gestStart * ev.scale, ev.clientX - rect.left, ev.clientY - rect.top);
+    });
+    container.addEventListener('gestureend', (ev) => { ev.preventDefault(); });
   }
 
   // --------- popup ---------
@@ -302,7 +470,33 @@
     popup = document.getElementById('hm-detail');
     if (!container) return;
 
+    // Inner stage holds the absolutely-positioned tiles; we transform this
+    // element to pan the heatmap, and resize it to drive the zoom.
+    stage = document.createElement('div');
+    stage.className = 'hm-tm-stage';
+    container.appendChild(stage);
+
+    // Zoom toolbar (bottom-right). The buttons are wired here so we can
+    // also reach them from keyboard shortcuts.
+    const ui = document.createElement('div');
+    ui.className = 'hm-zoom-ui';
+    ui.innerHTML = `
+      <button type="button" class="hm-zoom-btn" data-zoom="out" aria-label="Zoom out">−</button>
+      <span class="hm-zoom-lvl" id="hm-zoom-level">1.0×</span>
+      <button type="button" class="hm-zoom-btn" data-zoom="in" aria-label="Zoom in">+</button>
+      <button type="button" class="hm-zoom-btn" data-zoom="reset" aria-label="Reset zoom">⤾</button>
+    `;
+    container.appendChild(ui);
+    ui.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-zoom]');
+      if (!b) return;
+      if (b.dataset.zoom === 'in')        setZoom(zoom * 1.4);
+      else if (b.dataset.zoom === 'out')  setZoom(zoom / 1.4);
+      else if (b.dataset.zoom === 'reset') resetZoom();
+    });
+
     container.addEventListener('click', (ev) => {
+      if (ev.target.closest('.hm-zoom-ui')) return;
       const t = ev.target.closest('.hm-tile-grid');
       if (t && t.dataset.sym) openDetail(t.dataset.sym);
     });
@@ -315,11 +509,19 @@
     }
 
     if (window.ResizeObserver) {
-      ro = new ResizeObserver(schedule);
+      ro = new ResizeObserver(() => { clampPan(); schedule(); });
       ro.observe(container);
     } else {
-      window.addEventListener('resize', schedule);
+      window.addEventListener('resize', () => { clampPan(); schedule(); });
     }
+
+    bindZoom();
+    document.addEventListener('keydown', (ev) => {
+      if (!document.body.classList.contains('heatmap-mode')) return;
+      if (ev.key === '+' || ev.key === '=') { setZoom(zoom * 1.4); }
+      else if (ev.key === '-' || ev.key === '_') { setZoom(zoom / 1.4); }
+      else if (ev.key === '0') { resetZoom(); }
+    });
 
     window.addEventListener('signal:quotes', schedule);
 
