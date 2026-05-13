@@ -43,9 +43,19 @@
   ];
 
   // Additional symbols pulled only for the heatmap (not rendered in the
-  // terminal table). Combined into a single Yahoo fetch.
+  // terminal table). Combined into a single Yahoo fetch. Sector / mcap
+  // metadata for these lives in js/heatmap-grid.js.
   const HEATMAP_EXTRA = [
-    'MA','BAC','HD','PG','KO','NKE','UNH','LLY','JNJ','CVX','ORCL','CRM',
+    // already in STOCKS: AAPL MSFT NVDA GOOGL AMZN META TSLA AVGO AMD NFLX COST JPM V WMT XOM
+    'ADBE','CRM','CSCO','ACN','IBM','QCOM','TXN','INTC','NOW','INTU','AMAT','MU','PANW','ANET','ORCL',
+    'DIS','TMUS','VZ','CMCSA','T',
+    'HD','MCD','NKE','LOW','SBUX','BKNG','TJX',
+    'MA','BAC','WFC','GS','MS','BLK','AXP','C','SCHW','SPGI',
+    'LLY','UNH','JNJ','MRK','ABBV','PFE','TMO','ABT','ISRG','AMGN','DHR','BMY',
+    'PG','KO','PEP','PM','MO',
+    'CVX','COP',
+    'GE','RTX','CAT','HON','BA','UPS','UNP','LMT',
+    'LIN','SHW','NEE','SO','PLD','AMT',
   ];
 
   // ---------- State ----------
