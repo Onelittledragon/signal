@@ -81,9 +81,13 @@ body.heatmap-mode .header {
   overflow: hidden;
   font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   cursor: zoom-in;
-  touch-action: none; /* let the pinch/drag handler own gestures */
+  /* At 1× let single-finger vertical drags scroll the page — without this,
+     mobile users can't swipe past the heatmap to reach the tiles + news
+     wire below it. Two-finger pinch still fires pointer events to our
+     gesture handler since we deliberately omit `pinch-zoom`. */
+  touch-action: pan-y;
 }
-.hm-treemap.is-zoomed { cursor: grab; }
+.hm-treemap.is-zoomed { cursor: grab; touch-action: none; }
 .hm-treemap.is-zoomed:active { cursor: grabbing; }
 
 .hm-tm-stage {
