@@ -1117,7 +1117,6 @@ Return JSON with this exact shape:
     $("#last-updated").textContent = `Updated ${fmtDateTime(state.updated)}`;
 
     btn.classList.remove("spinning");
-    if (!initial) toast("Refreshed");
   }
 
   $("#refresh-btn").addEventListener("click", () => refresh(false));
