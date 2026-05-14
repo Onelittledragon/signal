@@ -83,29 +83,24 @@
     throw lastErr || new Error("all proxies failed");
   }
 
-  // ---- News (RSS via rss2json) -----------------------------------------
+  // ---- News (server-side aggregator via /api/news) ----------------------
+  // The Vercel function aggregates and dedupes all feeds, so every device
+  // shares the same headline list and ordering.
   async function fetchNews() {
-    const results = await Promise.allSettled(
-      CFG.NEWS_FEEDS.map(async (feed) => {
-        const r = await fetch(CFG.RSS2JSON + encodeURIComponent(feed.url));
-        if (!r.ok) throw new Error(`rss2json ${r.status}`);
-        const j = await r.json();
-        if (j.status !== "ok" || !Array.isArray(j.items)) throw new Error("rss2json payload");
-        return j.items.slice(0, 15).map((it) => ({
-          title: stripTags(it.title || ""),
-          link: it.link,
-          source: feed.name,
-          time: new Date(it.pubDate || it.published || Date.now()),
-          summary: truncate(stripTags(it.description || it.content || ""), 260),
-        }));
-      })
-    );
-    const all = [];
-    let successful = 0;
-    for (const r of results) {
-      if (r.status === "fulfilled") { all.push(...r.value); successful++; }
-    }
-    if (all.length === 0) throw new Error("All news feeds failed");
+    const r = await fetch("/api/news", { cache: "no-store" });
+    if (!r.ok) throw new Error("news " + r.status);
+    const j = await r.json();
+    const raw = (j.items || []).map((it) => ({
+      title: stripTags(it.title || ""),
+      link: it.link,
+      source: it.source,
+      time: new Date(it.time || Date.now()),
+      summary: truncate(stripTags(it.summary || ""), 260),
+    }));
+    const all = raw;
+    const sources = new Set(raw.map((n) => n.source));
+    const successful = sources.size;
+    if (all.length === 0) throw new Error("news endpoint empty");
 
     const seen = new Set();
     const deduped = [];

@@ -8,7 +8,7 @@
 window.SIGNAL_CONFIG = {
   CLAUDE_API_KEY: "",
   CLAUDE_MODEL: "claude-sonnet-4-20250514",
-  REFRESH_MS: 5 * 60 * 1000,
+  REFRESH_MS: 60 * 1000,
 
   // CORS proxies tried in order — some endpoints don't serve CORS headers.
   CORS_PROXIES: [

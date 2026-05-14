@@ -66,12 +66,12 @@
     latencyMs: null,
   };
 
-  // ---------- Cache (localStorage, 30s TTL, stale-while-revalidate) ----------
-  // Always restore prior data instantly so repeat visits feel native; the
-  // background refresh below decides whether to skip the network call when the
-  // cache is still fresh (<30s old).
-  const CACHE_KEY = 'signal:cache:v1';
-  const CACHE_TTL_MS = 30 * 1000;
+  // ---------- Cache (localStorage, instant-paint only) ----------
+  // The localStorage cache exists ONLY to paint instantly on repeat visits.
+  // It never delays a network refresh — the server endpoint is the single
+  // source of truth across every device, and is edge-cached for ~3s.
+  const CACHE_KEY = 'signal:cache:v2';
+  const CACHE_TTL_MS = 0;
   function cacheLoad() {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
@@ -367,30 +367,34 @@
   }
 
   // ---------- Refresh loop ----------
+  // All clients fetch from our own /api/quotes endpoint. Vercel caches the
+  // response at the edge for ~3s, so every browser within that window sees
+  // the IDENTICAL payload — that's how mobile and desktop stay in sync.
   async function refreshQuotes() {
     const t0 = performance.now();
-    const yfSymbols = [
-      ...FUTURES.map(f => f.yf),
-      ...STOCKS.map(s => s.sym),
-      ...HEATMAP_EXTRA,
-    ];
-    const [stocks, crypto] = await Promise.all([fetchYahoo(yfSymbols), fetchCrypto()]);
-
-    for (const s of stocks) {
-      const f = FUTURES.find(x => x.yf === s.sym);
-      const key = f ? f.sym : s.sym;
-      state.quotes.set(key, { ...s });
+    try {
+      const r = await fetch('/api/quotes', { cache: 'no-store' });
+      if (!r.ok) throw new Error('quotes ' + r.status);
+      const j = await r.json();
+      const quotes = j.quotes || {};
+      // Replace the map atomically so all renderers see a consistent set.
+      const next = new Map();
+      for (const [k, v] of Object.entries(quotes)) next.set(k, v);
+      // Preserve any prior values for symbols the server didn't return.
+      for (const [k, v] of state.quotes) if (!next.has(k)) next.set(k, v);
+      state.quotes = next;
+      state.latencyMs = Math.round(performance.now() - t0);
+      state.lastUpdate = j.ts ? new Date(j.ts) : new Date();
+      cacheSave();
+      renderTable();
+      renderTicker();
+      renderStatus();
+      window.dispatchEvent(new CustomEvent('signal:quotes', { detail: { quotes: state.quotes, ts: state.lastUpdate } }));
+    } catch (e) {
+      // Soft-fail — keep whatever quotes we already had. Next tick retries.
+      state.latencyMs = Math.round(performance.now() - t0);
+      renderStatus();
     }
-    for (const c of crypto) state.quotes.set(c.sym, c);
-
-    state.latencyMs = Math.round(performance.now() - t0);
-    state.lastUpdate = new Date();
-    cacheSave();
-    renderTable();
-    renderTicker();
-    renderStatus();
-    // Notify other modules (ticker, heatmap) of fresh data.
-    window.dispatchEvent(new CustomEvent('signal:quotes', { detail: { quotes: state.quotes, ts: state.lastUpdate } }));
   }
 
   // Public surface for other modules.
@@ -403,33 +407,17 @@
   };
 
   async function refreshNews() {
-    const feeds = (CFG.NEWS_FEEDS || []).slice(0, 5);
-    if (!feeds.length || !CFG.RSS2JSON) return;
-    const results = await Promise.allSettled(feeds.map(async f => {
-      const r = await fetch(CFG.RSS2JSON + encodeURIComponent(f.url));
-      if (!r.ok) throw 0;
+    try {
+      const r = await fetch('/api/news', { cache: 'no-store' });
+      if (!r.ok) throw new Error('news ' + r.status);
       const j = await r.json();
-      if (j.status !== 'ok') throw 0;
-      return (j.items || []).slice(0, 25).map(it => ({
-        title: String(it.title || '').replace(/<[^>]+>/g, '').trim(),
-        summary: String(it.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 220),
-        link: it.link,
-        source: f.name,
-        category: f.name.split(' ')[0],
-        time: new Date(it.pubDate || Date.now()),
-      }));
-    }));
-    const all = [];
-    for (const r of results) if (r.status === 'fulfilled') all.push(...r.value);
-    const seen = new Set();
-    state.news = all.sort((a,b) => b.time - a.time).filter(it => {
-      const k = it.title.toLowerCase();
-      if (!k || seen.has(k)) return false;
-      seen.add(k); return true;
-    }).slice(0, 50);
-    cacheSave();
-    renderNews();
-    window.dispatchEvent(new CustomEvent('signal:news', { detail: { news: state.news } }));
+      state.news = (j.items || []).map(n => ({ ...n, time: new Date(n.time) }));
+      cacheSave();
+      renderNews();
+      window.dispatchEvent(new CustomEvent('signal:news', { detail: { news: state.news } }));
+    } catch {
+      // Keep existing news on failure.
+    }
   }
 
   // ---------- Command parser ----------
@@ -673,17 +661,20 @@
     renderTable();
     renderNews();
     renderStatus();
-    if (cacheFresh(cachedTs)) {
-      // Schedule refresh for when the cache would go stale instead of hitting
-      // the network immediately.
-      const delay = Math.max(0, CACHE_TTL_MS - (Date.now() - cachedTs));
-      setTimeout(() => { refreshQuotes(); refreshNews(); }, delay);
-    } else {
-      refreshQuotes();
-      refreshNews();
-    }
-    setInterval(refreshQuotes, 15000);
-    setInterval(refreshNews, 120 * 1000);
+    // Always hit the server immediately — the localStorage cache only exists
+    // to paint instantly while the network request is in flight.
+    refreshQuotes();
+    refreshNews();
+    // 5s quote polling — the /api/quotes endpoint is edge-cached for ~3s so
+    // this stays cheap while keeping every device in lockstep.
+    setInterval(refreshQuotes, 5000);
+    setInterval(refreshNews, 30 * 1000);
+    // Pause polling while the tab is hidden, refresh immediately on focus
+    // so the data is already current when the user returns.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) { refreshQuotes(); refreshNews(); }
+    });
+    window.addEventListener('focus', () => { refreshQuotes(); refreshNews(); });
     setInterval(() => {
       // re-tick the timestamps in the news list (relative ages drift)
       renderNews();
