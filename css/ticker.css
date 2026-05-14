@@ -16,7 +16,12 @@
   line-height: 24px;
   letter-spacing: 0.04em;
   font-feature-settings: 'tnum' 1, 'zero' 1;
+  /* Allow horizontal swipe through the ticker; the JS driver consumes it. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
 }
+.global-ticker.is-dragging { cursor: grabbing; }
 
 /* When the Terminal tab paints the body black, just keep the ticker black too. */
 body.terminal-mode .global-ticker { background: #000; border-bottom-color: #1a2a1a; }
@@ -24,13 +29,8 @@ body.terminal-mode .global-ticker { background: #000; border-bottom-color: #1a2a
 .global-ticker-track {
   display: inline-block;
   white-space: nowrap;
-  padding-left: 100%;
-  animation: gt-marquee 90s linear infinite;
   will-change: transform;
-}
-@keyframes gt-marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  transform: translate3d(0, 0, 0);
 }
 
 .gt-item {
