@@ -153,7 +153,14 @@
   };
   const handleFor = (src) => SOURCE_HANDLES[src] || `@${String(src || "").replace(/[^A-Za-z0-9]+/g, "")}`;
 
-  const stripTags = (s) => String(s).replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  // Decode HTML entities (named, decimal, hex) using a textarea — handles &#x2019; → '
+  const _entityDecoder = document.createElement("textarea");
+  const decodeEntities = (s) => {
+    if (s == null) return "";
+    _entityDecoder.innerHTML = String(s);
+    return _entityDecoder.value;
+  };
+  const stripTags = (s) => decodeEntities(String(s).replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
   const truncate = (s, n) => s.length > n ? s.slice(0, n - 1).trim() + "…" : s;
 
   function scoreSentiment(text) {
