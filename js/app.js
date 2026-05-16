@@ -409,88 +409,121 @@ Return JSON with this exact shape:
 
   const badgeFor = (s) => s === "bullish" ? "badge-bull" : s === "bearish" ? "badge-bear" : "badge-neutral";
 
-  // ---- Render: News ----------------------------------------------------
+  // ---- Render: News (Twitter-style feed) -------------------------------
   let newsFilter = "all";
-  function renderNews() {
-    const sources = new Set(state.news.map((n) => n.source));
-    $("#news-sources").textContent = `${sources.size} sources`;
 
-    // Top 3 stories always come from the unfiltered impact-ranked list — #1 is the hero,
-    // #2 and #3 are runner-up cards. The feed below shows everything from #4 onwards.
-    const runners = state.news.slice(1, 3);
-    const rest = state.news.slice(3);
-    const list = rest.filter((n) => newsFilter === "all" ? true : n.sentiment === newsFilter);
-    $("#news-count").textContent = list.length + Math.min(state.news.length, 3);
+  const avatarFor = (src) => {
+    const s = String(src || "?").trim();
+    const parts = s.split(/\s+/).filter(Boolean);
+    const initials = (parts.length >= 2 ? parts[0][0] + parts[1][0] : s.slice(0, 2)).toUpperCase();
+    // Stable color from source name.
+    let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    const hue = Math.abs(h) % 360;
+    return { initials, hue };
+  };
 
-    const runnersHost = $("#top3-runners");
-    if (runnersHost) {
-      runnersHost.innerHTML = runners.map((n, i) => `
-        <a class="top3-card ${esc(n.sentiment)}" href="${esc(n.link)}" target="_blank" rel="noopener noreferrer" style="animation-delay:${i * 60}ms">
-          <div class="top3-rank">#${i + 2}</div>
-          <div class="top3-body">
-            <div class="top3-meta">
-              <span class="badge ${badgeFor(n.sentiment)}">${n.sentiment}</span>
-              <span>${esc(n.source)}</span>
-              <span>·</span>
-              <span>${relTime(n.time)}</span>
-              <span class="top3-score">IMPACT ${Math.round(n.impact || 0)}</span>
-            </div>
-            <div class="top3-title">${esc(n.title)}</div>
-            ${n.summary ? `<div class="top3-summary">${esc(n.summary)}</div>` : ""}
-          </div>
-        </a>
-      `).join("");
-    }
+  const verifiedSources = new Set([
+    "Reuters","Bloomberg","Financial Times","FT","Wall Street Journal","WSJ",
+    "Associated Press","AP","CNBC","BBC","The New York Times","NYT","NYTimes",
+  ]);
 
-    const itemHtml = (n, i) => `
-      <article class="news-item ${esc(n.sentiment)}" style="animation-delay:${i * 28}ms">
-        <div class="news-meta">
-          <span class="news-handle">${esc(handleFor(n.source))}</span>
-          <span class="dot-sep">·</span>
-          <span>${relTime(n.time)}</span>
-          <span class="impact-chip" title="Market impact score">${Math.round(n.impact || 0)}</span>
-        </div>
-        <div class="news-title"><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a></div>
-      </article>`;
-
-    $("#news-feed").innerHTML = list.length
-      ? list.map(itemHtml).join("")
-      : `<div class="card" style="text-align:center;color:var(--ink-mute)">No stories in this filter.</div>`;
-    renderTopMover();
-    applyMood();
-  }
-
-  function renderTopMover() {
-    const n = state.news[0];
-    if (!n) return;
+  function postHtml(n, i, opts = {}) {
     const score = Math.round(n.impact || 0);
-    const second = state.news[1];
-    const peerGap = second ? Math.max(0, score - Math.round(second.impact || 0)) : 0;
+    const fillPct = Math.min(100, score);
+    const av = avatarFor(n.source);
+    const tags = (n.topics || []).slice(0, 4);
+    const verified = verifiedSources.has(String(n.source));
+    const isPinned = !!opts.pinned;
+    const impactClass = score >= 60 ? "tw-impact-high" : score >= 35 ? "tw-impact-mid" : "tw-impact-low";
     const verdict =
       score >= 80 ? "Likely already moving futures" :
       score >= 60 ? "High potential to move futures" :
       score >= 40 ? "Moderate tape influence" :
-      score >= 25 ? "Background noise — monitor" :
+      score >= 25 ? "Background noise" :
                     "Low direct impact";
-    const fillPct = Math.min(100, Math.round(score));
-    $("#tm-title").textContent = n.title;
-    $("#tm-summary").textContent = n.summary || "No summary provided by the wire.";
-    $("#tm-source").textContent = n.source;
-    $("#tm-time").textContent = relTime(n.time);
-    $("#tm-sent").innerHTML = `<span class="badge ${badgeFor(n.sentiment)}">${n.sentiment}</span>`;
-    $("#tm-score").textContent = score;
-    $("#tm-fill").style.width = fillPct + "%";
-    $("#tm-impact-verdict").textContent = verdict;
-    $("#tm-peer").textContent = peerGap > 0 ? `+${peerGap} vs #2` : "leading the feed";
-    $("#tm-link").href = n.link;
-    const hero = $("#tm-hero");
-    if (hero) {
-      hero.classList.remove("tm-state-high","tm-state-mid","tm-state-low");
-      hero.classList.add(score >= 60 ? "tm-state-high" : score >= 35 ? "tm-state-mid" : "tm-state-low");
-    }
-    const tags = (n.topics && n.topics.length ? n.topics : ["General market"]).slice(0, 6);
-    $("#tm-tags").innerHTML = tags.map((t) => `<span class="tm-tag">${esc(t)}</span>`).join("");
+
+    return `
+      <article class="tw-post ${esc(n.sentiment)} ${isPinned ? "tw-pinned" : ""}" style="animation-delay:${i * 26}ms">
+        ${isPinned ? `<div class="tw-pin-flag"><span class="tw-pin-dot"></span> HIGHEST MARKET IMPACT · PINNED</div>` : ""}
+        <div class="tw-post-row">
+          <div class="tw-avatar" style="background:hsl(${av.hue} 60% 32%);">${esc(av.initials)}</div>
+          <div class="tw-post-main">
+            <div class="tw-post-head">
+              <span class="tw-name">${esc(n.source)}</span>
+              ${verified ? `<svg class="tw-verified" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.5 12.5l-2-2.3.3-3-3-.6L16.3 4l-2.8 1.2L11 3.4 8.7 5.2 5.9 4 4.5 6.6l-3 .6.3 3-2 2.3 2 2.3-.3 3 3 .6 1.2 2.6 2.8-1.2 2.5 1.8 2.3-1.8 2.8 1.2 1.5-2.6 3-.6-.3-3zM10.6 16.6l-3.8-3.8 1.5-1.5 2.3 2.3 5.3-5.3 1.5 1.5z"/></svg>` : ""}
+              <span class="tw-handle">${esc(handleFor(n.source))}</span>
+              <span class="tw-dot">·</span>
+              <span class="tw-time">${relTime(n.time)}</span>
+              <span class="tw-impact-chip ${impactClass}" title="Market impact score">${score}</span>
+            </div>
+            ${isPinned
+              ? `<h2 class="tw-title tw-title-hero"><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a></h2>`
+              : `<div class="tw-title"><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a></div>`}
+            ${n.summary ? `<p class="tw-summary">${esc(n.summary)}</p>` : ""}
+            ${tags.length ? `<div class="tw-tags">${tags.map((t) => `<span class="tw-tag">#${esc(String(t).replace(/\s+/g, ""))}</span>`).join("")}</div>` : ""}
+            <div class="tw-impact-bar"><div class="tw-impact-fill ${impactClass}" style="width:${fillPct}%"></div></div>
+            <div class="tw-actions">
+              <span class="tw-action" title="Sentiment"><span class="tw-sent-dot ${esc(n.sentiment)}"></span>${esc(n.sentiment)}</span>
+              <span class="tw-action" title="Market impact">⚡ impact ${score}</span>
+              <span class="tw-action tw-action-verdict">${esc(verdict)}</span>
+              <a class="tw-action tw-action-link" href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">Open ↗</a>
+            </div>
+          </div>
+        </div>
+      </article>`;
   }
+
+  function renderNews() {
+    const feed = $("#tw-feed");
+    if (!feed) return;
+    const sources = new Set(state.news.map((n) => n.source));
+    $("#news-sources").textContent = `${sources.size} sources`;
+
+    if (!state.news.length) {
+      feed.innerHTML = `<div class="tw-empty">Live wire feeds are being scored for market impact. Stories will appear here ranked by projected NQ/ES effect.</div>`;
+      $("#news-count").textContent = 0;
+      applyMood();
+      return;
+    }
+
+    const top = state.news[0];
+    const rest = state.news.slice(1);
+    const filtered = rest.filter((n) => newsFilter === "all" ? true : n.sentiment === newsFilter);
+    const showTop = newsFilter === "all" || top.sentiment === newsFilter;
+
+    const html = [];
+    if (showTop) html.push(postHtml(top, 0, { pinned: true }));
+    filtered.forEach((n, i) => html.push(postHtml(n, i + 1)));
+
+    feed.innerHTML = html.length
+      ? html.join("")
+      : `<div class="tw-empty">No stories in this filter.</div>`;
+
+    $("#news-count").textContent = (showTop ? 1 : 0) + filtered.length;
+
+    // Sidebar
+    const trending = $("#tw-trending");
+    if (trending) {
+      trending.innerHTML = state.news.slice(0, 5).map((n, i) => `
+        <a class="tw-trend" href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">
+          <div class="tw-trend-rank">${i + 1}</div>
+          <div class="tw-trend-body">
+            <div class="tw-trend-meta">${esc(n.source)} · impact ${Math.round(n.impact || 0)}</div>
+            <div class="tw-trend-title">${esc(n.title)}</div>
+          </div>
+        </a>`).join("");
+    }
+    const bullN = state.news.filter((n) => n.sentiment === "bullish").length;
+    const bearN = state.news.filter((n) => n.sentiment === "bearish").length;
+    const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    setText("#tw-bull", bullN);
+    setText("#tw-bear", bearN);
+    setText("#tw-sources-n", sources.size);
+
+    applyMood();
+  }
+
+  function renderTopMover() { /* superseded by Twitter-style feed; pinned post handles this */ }
 
   $$("[data-filter]").forEach((btn) => btn.addEventListener("click", () => {
     newsFilter = btn.dataset.filter;
@@ -1091,7 +1124,7 @@ Return JSON with this exact shape:
         .then((d) => { state.news = d.items; renderNews(); buildTicker(); })
         .catch((e) => {
           console.warn("News", e);
-          if (state.news.length === 0) $("#news-feed").innerHTML = `<div class="card" style="color:var(--ink-mute)">News feeds are temporarily unavailable. Retrying in 5 minutes.</div>`;
+          if (state.news.length === 0) { const f = $("#tw-feed"); if (f) f.innerHTML = `<div class="tw-empty">News feeds are temporarily unavailable. Retrying in 5 minutes.</div>`; }
         }),
     ]);
 

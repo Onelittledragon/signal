@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
-<link rel="stylesheet" href="css/style.css?v=5" />
+<link rel="stylesheet" href="css/style.css?v=6" />
 <link rel="stylesheet" href="css/terminal.css?v=8" />
 <link rel="stylesheet" href="css/ticker.css?v=4" />
 <link rel="stylesheet" href="css/heatmap.css?v=11" />
@@ -88,62 +88,50 @@
 
   <!-- ============================== SIGNAL ============================== -->
   <section class="tab-panel active" data-panel="signal">
-    <div class="tm-hero" id="tm-hero">
-      <div class="tm-hero-flag">
-        <span class="tm-flag-dot"></span>
-        <span id="tm-flag-label">HIGHEST MARKET IMPACT · LIVE</span>
-      </div>
-      <div class="tm-hero-body">
-        <div class="tm-hero-meta">
-          <span class="tm-source" id="tm-source">—</span>
-          <span class="tm-sep">·</span>
-          <span class="tm-time" id="tm-time">—</span>
-          <span class="tm-sep">·</span>
-          <span class="tm-sent" id="tm-sent">—</span>
-        </div>
-        <h2 class="tm-hero-title" id="tm-title">Ranking incoming headlines…</h2>
-        <p class="tm-hero-summary" id="tm-summary">Live wire feeds are being scored for market impact. The story with the biggest projected effect on NQ and ES will appear here.</p>
-
-        <div class="tm-impact">
-          <div class="tm-impact-row">
-            <div class="tm-impact-label">Market Impact Score</div>
-            <div class="tm-impact-num" id="tm-score">—</div>
+    <div class="tw-layout">
+      <div class="tw-main">
+        <div class="tw-head-bar">
+          <div class="tw-head-title">
+            <h2>Latest</h2>
+            <span class="tw-head-sub">Ranked by market impact · live wire</span>
           </div>
-          <div class="tm-impact-bar"><div class="tm-impact-fill" id="tm-fill"></div></div>
-          <div class="tm-impact-row">
-            <div class="tm-impact-label" id="tm-impact-verdict">Awaiting data</div>
-            <div class="tm-impact-peer" id="tm-peer">—</div>
+          <div class="tw-head-filters">
+            <button class="tw-chip active" data-filter="all">All</button>
+            <button class="tw-chip" data-filter="bullish">Bullish</button>
+            <button class="tw-chip" data-filter="bearish">Bearish</button>
+            <button class="tw-chip" data-filter="neutral">Neutral</button>
           </div>
         </div>
 
-        <div class="tm-why">
-          <div class="tm-why-label">Why it's moving</div>
-          <div class="tm-tags" id="tm-tags"></div>
-        </div>
+        <div class="tw-feed" id="tw-feed"></div>
 
-        <a class="tm-cta" id="tm-link" target="_blank" rel="noopener noreferrer">Read the full story →</a>
-      </div>
-    </div>
-
-    <div class="top3-grid" id="top3-runners"></div>
-
-    <div class="section">
-      <div class="section-head">
-        <h2>The Feed</h2>
-        <div class="meta">Filler filtered out — only stories the tape actually cares about</div>
-      </div>
-      <div class="legend">
-        <span>Filter:</span>
-        <button class="chip active" data-filter="all">All</button>
-        <button class="chip" data-filter="bullish">Bullish</button>
-        <button class="chip" data-filter="bearish">Bearish</button>
-        <button class="chip" data-filter="neutral">Neutral</button>
-        <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-mute)">
+        <div class="tw-feed-foot">
           <span id="news-count">0</span> stories ·
           <span id="news-sources">—</span>
-        </span>
+        </div>
       </div>
-      <div class="news-feed" id="news-feed" style="margin-top:22px"></div>
+
+      <aside class="tw-aside">
+        <div class="tw-card tw-trending">
+          <div class="tw-card-head">What's moving</div>
+          <div class="tw-trending-list" id="tw-trending"></div>
+        </div>
+        <div class="tw-card tw-pulse">
+          <div class="tw-card-head">Tape pulse</div>
+          <div class="tw-pulse-row">
+            <span class="tw-pulse-label">Bull stories</span>
+            <span class="tw-pulse-val" id="tw-bull">0</span>
+          </div>
+          <div class="tw-pulse-row">
+            <span class="tw-pulse-label">Bear stories</span>
+            <span class="tw-pulse-val" id="tw-bear">0</span>
+          </div>
+          <div class="tw-pulse-row">
+            <span class="tw-pulse-label">Sources</span>
+            <span class="tw-pulse-val" id="tw-sources-n">0</span>
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
