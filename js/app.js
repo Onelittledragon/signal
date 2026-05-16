@@ -446,7 +446,6 @@ Return JSON with this exact shape:
       <article class="tw-post ${esc(n.sentiment)} ${isPinned ? "tw-pinned" : ""}" style="animation-delay:${i * 26}ms">
         ${isPinned ? `<div class="tw-pin-flag"><span class="tw-pin-dot"></span> HIGHEST MARKET IMPACT · PINNED</div>` : ""}
         <div class="tw-post-row">
-          <div class="tw-avatar" style="background:hsl(${av.hue} 60% 32%);">${esc(av.initials)}</div>
           <div class="tw-post-main">
             <div class="tw-post-head">
               <span class="tw-name">${esc(n.source)}</span>

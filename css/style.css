@@ -1296,13 +1296,19 @@ body.situation-room .geo-risks { max-height: 760px; }
   to { opacity: 1; transform: translateY(0); }
 }
 .tw-post:last-child { border-bottom: none; }
-.tw-post:hover { background: rgba(255,255,255,0.02); }
 
-.tw-pinned {
-  background: linear-gradient(140deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
-  border-bottom: 1px solid var(--line-strong);
-  padding-top: 18px;
-}
+/* Sentiment-tinted background (fills the whole post). */
+.tw-post.bullish { background: rgba(64,160,90,0.14); }
+.tw-post.bearish { background: rgba(232,93,74,0.14); }
+.tw-post.neutral { background: rgba(110,118,133,0.08); }
+.tw-post.bullish:hover { background: rgba(64,160,90,0.20); }
+.tw-post.bearish:hover { background: rgba(232,93,74,0.20); }
+.tw-post.neutral:hover { background: rgba(110,118,133,0.13); }
+
+.tw-pinned { border-bottom: 1px solid var(--line-strong); padding-top: 18px; }
+.tw-pinned.bullish { background: rgba(64,160,90,0.22); }
+.tw-pinned.bearish { background: rgba(232,93,74,0.22); }
+.tw-pinned.neutral { background: rgba(110,118,133,0.14); }
 .tw-pin-flag {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--mono); font-size: 10.5px; font-weight: 700;
@@ -1316,20 +1322,7 @@ body.situation-room .geo-risks { max-height: 760px; }
   animation: pulse 1.4s infinite;
 }
 
-.tw-post-row {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 12px;
-  min-width: 0;
-}
-.tw-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  display: grid; place-items: center;
-  font-family: var(--mono); font-weight: 700; font-size: 13px;
-  color: #fff;
-  letter-spacing: 0.02em;
-  flex: 0 0 44px;
-}
+.tw-post-row { display: block; min-width: 0; }
 
 .tw-post-main { min-width: 0; }
 .tw-post-head {
@@ -1367,7 +1360,13 @@ body.situation-room .geo-risks { max-height: 760px; }
   margin: 4px 0 10px;
 }
 .tw-title a, .tw-title-hero a { color: var(--ink); }
-.tw-title a:hover, .tw-title-hero a:hover { color: var(--ink-soft); }
+.tw-title a:hover, .tw-title-hero a:hover { opacity: 0.85; }
+
+/* Sentiment-colored headlines. */
+.tw-post.bullish .tw-title a,
+.tw-post.bullish .tw-title-hero a { color: var(--bull); }
+.tw-post.bearish .tw-title a,
+.tw-post.bearish .tw-title-hero a { color: var(--bear); }
 
 .tw-summary {
   font-size: 14.5px; line-height: 1.55;
@@ -1413,9 +1412,6 @@ body.situation-room .geo-risks { max-height: 760px; }
 .tw-sent-dot.bearish { background: var(--bear); }
 .tw-sent-dot.neutral { background: var(--ink-mute); }
 
-.tw-post.bullish { box-shadow: inset 3px 0 0 var(--bull); }
-.tw-post.bearish { box-shadow: inset 3px 0 0 var(--bear); }
-.tw-post.neutral { box-shadow: inset 3px 0 0 rgba(110,118,133,0.5); }
 
 /* ---- Sidebar ---- */
 .tw-aside { position: sticky; top: 14px; display: flex; flex-direction: column; gap: 16px; }
@@ -1466,8 +1462,6 @@ body.situation-room .geo-risks { max-height: 760px; }
 @media (max-width: 600px) {
   .tw-head-bar { padding: 12px 14px; }
   .tw-post { padding: 12px 14px; }
-  .tw-post-row { grid-template-columns: 38px 1fr; gap: 10px; }
-  .tw-avatar { width: 38px; height: 38px; flex-basis: 38px; font-size: 12px; }
   .tw-title-hero { font-size: 20px; }
   .tw-title { font-size: 15px; }
   .tw-summary { font-size: 14px; }
