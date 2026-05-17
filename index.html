@@ -52,13 +52,6 @@
         </svg>
         <span class="tab-label">Terminal</span>
       </button>
-      <button class="tab-btn" data-tab="markets" role="tab" aria-label="Markets" title="Markets">
-        <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 17l5-5 4 4 7-9"/>
-          <polyline points="14 7 19 7 19 12"/>
-        </svg>
-        <span class="tab-label">Markets</span>
-      </button>
       <button class="tab-btn" data-tab="heatmap" role="tab" aria-label="Heatmap" title="Heatmap">
         <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="3"  width="8" height="8" rx="1"/>
@@ -421,17 +414,6 @@
     </div>
   </section>
 
-  <!-- ============================== MARKETS ============================== -->
-  <section class="tab-panel" data-panel="markets">
-    <div class="section-head">
-      <div>
-        <h2>Markets</h2>
-        <div class="meta">Live charts · TradingView</div>
-      </div>
-    </div>
-    <div class="markets-grid" id="markets-grid"></div>
-  </section>
-
 </main>
 
 <footer class="footer">
@@ -448,9 +430,7 @@
 <script src="js/terminal.js?v=7"></script>
 <script src="js/ticker.js?v=4"></script>
 <script src="js/heatmap.js?v=3"></script>
-<script src="js/heatmap-grid.js?v=6"></script>
-<script src="js/markets.js?v=2"></script>
-<script>
+<script src="js/heatmap-grid.js?v=6"></script><script>
   // Mobile: relocate the tab nav out of .header so position:fixed escapes the
   // backdrop-filter containing block and pins to the viewport bottom.
   (() => {
