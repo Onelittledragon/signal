@@ -11,6 +11,9 @@
     world: null,
     geoFilter: "all",       // "all" | "high" | "medium" | "low"
     activePopupRisk: null,
+    countryCache: {},       // name -> { data, time }
+    activeCountry: null,
+    countryReqId: 0,
   };
 
   // ---- DOM helpers ------------------------------------------------------
@@ -666,6 +669,9 @@ Return JSON with this exact shape:
     });
 
     // Rotation controls
+    const cpClose = $("#cp-close");
+    if (cpClose) cpClose.addEventListener("click", (ev) => { ev.stopPropagation(); hideCountryPanel(); });
+
     $("#globe-toggle").addEventListener("click", () => {
       globe.autoRotate = !globe.autoRotate;
       updateToggleLabel();
@@ -696,10 +702,12 @@ Return JSON with this exact shape:
     svgEl.addEventListener("mousemove", onGlobePointerMove);
     svgEl.addEventListener("mouseleave", onGlobePointerLeave);
 
-    // Close the flashpoint popup when the user clicks empty ocean
+    // Close popups when the user clicks empty ocean (not a pin or country).
     svgEl.addEventListener("click", (ev) => {
       if (ev.target.closest(".risk-pin")) return;
+      if (ev.target.closest(".globe-country")) return;
       hideFlashpointPopup();
+      hideCountryPanel();
     });
   }
 
@@ -795,6 +803,13 @@ Return JSON with this exact shape:
         d3.select(this).classed("is-hover", false);
         const tip = $("#geo-country-tip");
         if (tip) tip.classList.remove("show");
+      });
+      enter.on("click", function (ev, d) {
+        ev.stopPropagation();
+        const name = d.properties?.name;
+        if (!name) return;
+        hideFlashpointPopup();
+        openCountryPanel(name, d);
       });
       enter.merge(sel).attr("d", globe.path);
       sel.exit().remove();
@@ -966,6 +981,179 @@ Return JSON with this exact shape:
     const y = (svgRect.top - mapRect.top) + p[1] * scale;
     popup.style.left = x + "px";
     popup.style.top  = y + "px";
+  }
+
+  // --- Country side-panel: click a country to fetch a Claude-powered ------
+  // geopolitical briefing tailored to NQ/ES futures traders.
+  function openCountryPanel(country, feature) {
+    const panel = $("#country-panel");
+    if (!panel) return;
+    state.activeCountry = country;
+    panel.classList.add("show");
+    panel.setAttribute("aria-hidden", "false");
+
+    const cached = state.countryCache[country];
+    const fresh  = cached && (Date.now() - cached.time) < 15 * 60 * 1000;
+
+    if (fresh) {
+      renderCountryPanel(country, cached.data);
+      return;
+    }
+
+    // Show loading state immediately
+    renderCountryLoading(country);
+
+    const myReq = ++state.countryReqId;
+    fetchCountryBriefing(country).then((data) => {
+      if (myReq !== state.countryReqId) return; // stale
+      state.countryCache[country] = { data, time: Date.now() };
+      if (state.activeCountry === country) renderCountryPanel(country, data);
+    }).catch((err) => {
+      if (myReq !== state.countryReqId) return;
+      renderCountryError(country, err);
+    });
+  }
+
+  function hideCountryPanel() {
+    const panel = $("#country-panel");
+    if (!panel) return;
+    panel.classList.remove("show", "sev-high", "sev-medium", "sev-low");
+    panel.setAttribute("aria-hidden", "true");
+    state.activeCountry = null;
+    state.countryReqId++; // invalidate any in-flight requests
+  }
+
+  function renderCountryLoading(country) {
+    const panel = $("#country-panel");
+    if (!panel) return;
+    panel.classList.remove("sev-high", "sev-medium", "sev-low");
+    $("#cp-region").textContent = "ANALYZING";
+    $("#cp-country").textContent = country;
+    const pill = $("#cp-risk-pill");
+    pill.className = "cp-risk-pill";
+    pill.textContent = "—";
+    $("#cp-situation").innerHTML = '<div class="cp-loading">Querying Claude…</div>';
+    $("#cp-impact").textContent = "—";
+    $("#cp-bias").textContent = "—";
+    $("#cp-bias").className = "cp-section-body cp-bias";
+    $("#cp-watchlist").innerHTML = "";
+    $("#cp-foot").textContent = `REQ ${new Date().toISOString().slice(11,19)}Z · ${country.toUpperCase()}`;
+  }
+
+  function renderCountryError(country, err) {
+    const panel = $("#country-panel");
+    if (!panel) return;
+    panel.classList.remove("sev-high", "sev-medium", "sev-low");
+    $("#cp-region").textContent = "OFFLINE";
+    $("#cp-country").textContent = country;
+    const pill = $("#cp-risk-pill");
+    pill.className = "cp-risk-pill";
+    pill.textContent = "N/A";
+    const needsKey = !CFG.CLAUDE_API_KEY;
+    $("#cp-situation").innerHTML = needsKey
+      ? "Live geopolitical briefings require an Anthropic API key. Add one in <code>js/config.js</code> to enable per-country analysis."
+      : `Briefing unavailable: ${esc(String(err && err.message || err))}`;
+    $("#cp-impact").textContent = "—";
+    $("#cp-bias").textContent = "—";
+    $("#cp-bias").className = "cp-section-body cp-bias";
+    $("#cp-watchlist").innerHTML = "";
+    $("#cp-foot").textContent = needsKey ? "NO API KEY CONFIGURED" : "FETCH FAILED";
+  }
+
+  function renderCountryPanel(country, data) {
+    const panel = $("#country-panel");
+    if (!panel || !data) return;
+    const risk = (data.risk_level || "minimal").toLowerCase();
+    const sevClass = risk === "high" || risk === "medium" || risk === "low" ? `sev-${risk}` : "";
+    panel.classList.remove("sev-high", "sev-medium", "sev-low");
+    if (sevClass) panel.classList.add(sevClass);
+
+    $("#cp-region").textContent = (data.region || "GLOBAL").toString().toUpperCase();
+    $("#cp-country").textContent = country;
+
+    const pill = $("#cp-risk-pill");
+    pill.className = `cp-risk-pill lvl-${risk}`;
+    pill.textContent = risk.toUpperCase();
+
+    $("#cp-situation").textContent = data.situation || "No active briefing.";
+    $("#cp-impact").textContent    = data.nq_es_impact || "Limited direct impact on NQ/ES.";
+
+    const bias = (data.bias || "neutral").toLowerCase();
+    const biasEl = $("#cp-bias");
+    biasEl.className = `cp-section-body cp-bias bias-${bias}`;
+    biasEl.textContent = (data.bias_note ? `${bias.toUpperCase()} · ${data.bias_note}` : bias.toUpperCase());
+
+    const list = $("#cp-watchlist");
+    list.innerHTML = "";
+    const watches = Array.isArray(data.catalysts) ? data.catalysts.slice(0, 5) : [];
+    if (watches.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No imminent catalysts identified.";
+      list.appendChild(li);
+    } else {
+      watches.forEach((w) => {
+        const li = document.createElement("li");
+        li.textContent = w;
+        list.appendChild(li);
+      });
+    }
+
+    const stamp = new Date().toISOString().slice(11,19);
+    $("#cp-foot").textContent = `CLAUDE BRIEFING · ${stamp}Z · ${country.toUpperCase()}`;
+  }
+
+  async function fetchCountryBriefing(country) {
+    const key = CFG.CLAUDE_API_KEY;
+    if (!key) throw new Error("No API key configured");
+
+    const headlineCtx = (state.news || []).slice(0, 12)
+      .map((n) => `- [${n.source}] ${n.title}`).join("\n");
+
+    const system = "You are a senior geopolitical risk analyst briefing a US equity index futures trader (NQ, ES). Be concrete, current, and specific. Return ONLY valid JSON matching the requested schema. No prose outside JSON.";
+    const user = `Today is ${new Date().toUTCString()}.
+
+Produce a focused geopolitical risk briefing for: ${country}
+
+Frame everything from the perspective of someone trading NQ and ES futures intraday and overnight. If the country has minimal direct market relevance, say so plainly rather than inventing risk.
+
+Recent global headlines for context:
+${headlineCtx || "(no headlines available)"}
+
+Return JSON with this EXACT shape, nothing else:
+{
+  "region": "<2-3 word region label, e.g. 'Eastern Europe'>",
+  "risk_level": "high" | "medium" | "low" | "minimal",
+  "situation": "<2-3 sentences describing what is happening in ${country} RIGHT NOW that matters to global markets>",
+  "nq_es_impact": "<2-3 sentences on the concrete mechanism by which this affects NQ/ES — supply chains, energy, rates, safe-haven flows, sector exposures, etc.>",
+  "bias": "bull" | "bear" | "neutral",
+  "bias_note": "<short phrase, e.g. 'risk-off bid, ES under pressure on escalation'>",
+  "catalysts": ["<short catalyst 1>", "<short catalyst 2>", "<short catalyst 3>"]
+}`;
+
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: CFG.CLAUDE_MODEL,
+        max_tokens: 900,
+        system,
+        messages: [{ role: "user", content: user }],
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      throw new Error(`Claude ${r.status}${txt ? ": " + txt.slice(0, 120) : ""}`);
+    }
+    const j = await r.json();
+    const text = j.content?.[0]?.text || "";
+    const jsonStr = text.match(/\{[\s\S]*\}/)?.[0];
+    if (!jsonStr) throw new Error("Could not parse Claude JSON");
+    return JSON.parse(jsonStr);
   }
 
   // --- Metrics strip (risk index + severity counts) -----------------------
