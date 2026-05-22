@@ -16,7 +16,10 @@
   const fmtClock = (ms) => {
     const d = new Date(ms);
     const p = (n) => String(n).padStart(2, '0');
-    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    const h = d.getHours();
+    const h12 = h % 12 || 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    return `${p(h12)}:${p(d.getMinutes())}:${p(d.getSeconds())} ${ampm}`;
   };
 
   function render() {
