@@ -39,7 +39,7 @@
               : it.impact === 'high' && it.sentiment === 'bearish'
               ? 'bear'
               : 'flat';
-          const fresh = state.seen.has(it.id) ? '' : ' wire-item--new';
+          const fresh = state.seen.has(it.headline) ? '' : ' wire-item--new';
           return `<a class="wire-item wire-item--${tone}${fresh}" href="${esc(
             it.url
           )}" target="_blank" rel="noopener">
@@ -50,7 +50,7 @@
         })
         .join('');
     }
-    state.items.forEach((it) => state.seen.add(it.id));
+    state.items.forEach((it) => state.seen.add(it.headline));
     if (countEl) countEl.textContent = String(items.length);
   }
 
