@@ -1597,6 +1597,12 @@ body.situation-room .geo-risks { max-height: 760px; }
 .wire-head-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .wire-head-title h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
 .wire-head-sub { font-size: 13px; color: var(--ink-mute); }
+.wire-date {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 500;
+  color: var(--ink-soft); letter-spacing: 0.02em;
+  padding: 3px 9px; border: 1px solid var(--line-strong);
+  border-radius: 6px; background: var(--bg-card);
+}
 
 .wire-live {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1643,6 +1649,13 @@ body.situation-room .geo-risks { max-height: 760px; }
   border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--bg-card); overflow: hidden;
 }
+.wire-day {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute);
+  padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 1;
+}
+
 .wire-item {
   display: flex; align-items: baseline; gap: 14px;
   padding: 11px 16px; border-bottom: 1px solid var(--line);

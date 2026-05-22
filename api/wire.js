@@ -9,24 +9,53 @@ const FINNHUB_KEY =
   (typeof process !== 'undefined' && process.env && process.env.FINNHUB_API_KEY) ||
   'd87rok9r01qmhakh41d0d87rok9r01qmhakh41dg';
 
-const FINNHUB_CATEGORIES = ['general', 'forex', 'merger'];
+const FINNHUB_CATEGORIES = ['general', 'forex', 'merger', 'crypto'];
 
-// RSS wires — these refresh fast and read like a newswire.
+// RSS wires — broad aggregation so the feed reads like a real newswire.
+// Failed feeds are dropped silently (Promise.allSettled), so an aggressive
+// list costs nothing when a source is down or geo-blocked.
 const RSS_FEEDS = [
-  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_25.rss' },
-  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_1.rss' },   // forex
-  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_95.rss' },  // economy
+  // Investing.com — fast, wire-style market coverage
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news.rss' },
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_25.rss' },   // stock market
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_1.rss' },    // forex
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_95.rss' },   // economy
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_11.rss' },   // commodities
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/news_287.rss' },  // economic indicators
+  { name: 'Investing.com', url: 'https://www.investing.com/rss/stock_Stock_Markets.rss' },
+  // MarketWatch — real-time headlines & bulletins
   { name: 'MarketWatch',   url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories' },
-  { name: 'CNBC',          url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html' },
-  { name: 'CNBC',          url: 'https://www.cnbc.com/id/20910258/device/rss/rss.html' }, // economy
+  { name: 'MarketWatch',   url: 'https://feeds.content.dowjones.io/public/rss/mw_marketpulse' },
+  { name: 'MarketWatch',   url: 'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines' },
+  { name: 'MarketWatch',   url: 'https://feeds.content.dowjones.io/public/rss/mw_bulletins' },
+  // CNBC — markets, economy, finance, earnings, investing
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' }, // top news
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html' },  // markets
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/20910258/device/rss/rss.html' },  // economy
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/10001147/device/rss/rss.html' },  // finance
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/15839069/device/rss/rss.html' },  // earnings
+  { name: 'CNBC',          url: 'https://www.cnbc.com/id/10000113/device/rss/rss.html' },  // investing
+  // Yahoo Finance
+  { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/news/rssindex' },
+  // Forex / macro specialists
+  { name: 'ForexLive',     url: 'https://www.forexlive.com/feed/news' },
+  { name: 'FXStreet',      url: 'https://www.fxstreet.com/rss/news' },
+  { name: 'DailyFX',       url: 'https://www.dailyfx.com/feeds/market-news' },
+  // Wire / aggregators
+  { name: 'Seeking Alpha', url: 'https://seekingalpha.com/market_currents.xml' },
+  { name: 'Seeking Alpha', url: 'https://seekingalpha.com/feed.xml' },
+  { name: 'NASDAQ',        url: 'https://www.nasdaq.com/feed/rssoutbound?category=Markets' },
+  { name: 'NASDAQ',        url: 'https://www.nasdaq.com/feed/rssoutbound?category=Economy' },
+  { name: 'Kitco',         url: 'https://www.kitco.com/rss/KitcoNews.xml' },
+  { name: 'The Street',    url: 'https://www.thestreet.com/.rss/full/' },
 ];
 
 const RSS_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (compatible; SIGNAL/1.0)',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
   'Accept': 'application/rss+xml, application/xml, text/xml, */*',
 };
 
-const MAX_AGE_MS = 1000 * 60 * 60 * 36; // wire feel — last 36h only
+const MAX_AGE_MS = 1000 * 60 * 60 * 48; // wire feel — last 48h only
 
 // --- Relevance: keep only market-moving, US-market-relevant stories --------
 const RELEVANT = [
@@ -155,7 +184,7 @@ function parseFeed(xml, source) {
   const items = [];
   const blocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) ||
     xml.match(/<entry[\s>][\s\S]*?<\/entry>/gi) || [];
-  for (const b of blocks.slice(0, 40)) {
+  for (const b of blocks.slice(0, 60)) {
     const title = stripTags(extract(b, 'title'));
     if (!title) continue;
     let link = stripTags(extract(b, 'link'));
@@ -171,14 +200,24 @@ function parseFeed(xml, source) {
   return items;
 }
 
+async function fetchWithTimeout(url, opts = {}, ms = 6000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function fetchRss(feed) {
-  const r = await fetch(feed.url, { headers: RSS_HEADERS, cache: 'no-store' });
+  const r = await fetchWithTimeout(feed.url, { headers: RSS_HEADERS, cache: 'no-store' });
   if (!r.ok) throw new Error(`${feed.name} ${r.status}`);
   return parseFeed(await r.text(), feed.name);
 }
 
 async function fetchFinnhub(cat) {
-  const r = await fetch(
+  const r = await fetchWithTimeout(
     `https://finnhub.io/api/v1/news?category=${cat}&token=${FINNHUB_KEY}`,
     { cache: 'no-store' }
   );
@@ -215,7 +254,7 @@ export default async function handler() {
         return true;
       })
       .sort((a, b) => b.time - a.time)
-      .slice(0, 100)
+      .slice(0, 200)
       .map((it, i) => {
         const { sentiment, impact } = classify(it.headline, it.summary);
         return {

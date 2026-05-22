@@ -6,6 +6,7 @@
 
   const countEl = document.getElementById('wire-count');
   const updatedEl = document.getElementById('wire-updated');
+  const dateEl = document.getElementById('wire-date');
 
   const state = { items: [], filter: 'all', highOnly: false, seen: new Set(), timer: null };
 
@@ -22,6 +23,16 @@
     return `${p(h12)}:${p(d.getMinutes())}:${p(d.getSeconds())} ${ampm}`;
   };
 
+  const fmtDateLong = (ms) =>
+    new Date(ms).toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+    });
+  const fmtDateShort = (ms) =>
+    new Date(ms).toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric',
+    });
+  const dayKey = (ms) => new Date(ms).toDateString();
+
   function render() {
     // A headline shows colour only when it is high-impact AND directional.
     const isColored = (it) => it.impact === 'high' && it.sentiment !== 'neutral';
@@ -35,8 +46,17 @@
         state.filter === 'all' ? '' : state.filter + ' '
       }headlines on the wire yet.</div>`;
     } else {
+      const today = dayKey(Date.now());
+      let lastDay = null;
       feed.innerHTML = items
         .map((it) => {
+          const day = dayKey(it.time);
+          let sep = '';
+          if (day !== lastDay) {
+            lastDay = day;
+            const label = day === today ? 'Today · ' + fmtDateShort(it.time) : fmtDateShort(it.time);
+            sep = `<div class="wire-day">${esc(label)}</div>`;
+          }
           const tone =
             it.impact === 'high' && it.sentiment === 'bullish'
               ? 'bull'
@@ -44,7 +64,7 @@
               ? 'bear'
               : 'flat';
           const fresh = state.seen.has(it.headline) ? '' : ' wire-item--new';
-          return `<a class="wire-item wire-item--${tone}${fresh}" href="${esc(
+          return `${sep}<a class="wire-item wire-item--${tone}${fresh}" href="${esc(
             it.url
           )}" target="_blank" rel="noopener">
             <span class="wire-time">${fmtClock(it.time)}</span>
@@ -97,6 +117,7 @@
 
   function start() {
     if (state.timer) return;
+    if (dateEl) dateEl.textContent = fmtDateLong(Date.now());
     load();
     state.timer = setInterval(load, 10000);
   }

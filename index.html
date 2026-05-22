@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
-<link rel="stylesheet" href="css/style.css?v=12" />
+<link rel="stylesheet" href="css/style.css?v=13" />
 <link rel="stylesheet" href="css/terminal.css?v=8" />
 <link rel="stylesheet" href="css/ticker.css?v=4" />
 <link rel="stylesheet" href="css/heatmap.css?v=11" />
@@ -315,6 +315,7 @@
         <div class="wire-head-title">
           <span class="wire-live"><span class="wire-live-dot"></span>LIVE</span>
           <h2>24/7 News Wire</h2>
+          <span class="wire-date" id="wire-date">—</span>
           <span class="wire-head-sub">Market-moving headlines · US stocks, futures, forex &amp; macro</span>
         </div>
         <div class="wire-filters">
@@ -466,7 +467,7 @@
 <script src="js/ticker.js?v=4"></script>
 <script src="js/heatmap.js?v=3"></script>
 <script src="js/heatmap-grid.js?v=6"></script>
-<script src="js/wire.js?v=5"></script>
+<script src="js/wire.js?v=6"></script>
 <script>
   // Mobile: relocate the tab nav out of .header so position:fixed escapes the
   // backdrop-filter containing block and pins to the viewport bottom.
