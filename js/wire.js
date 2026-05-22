@@ -7,7 +7,7 @@
   const countEl = document.getElementById('wire-count');
   const updatedEl = document.getElementById('wire-updated');
 
-  const state = { items: [], filter: 'all', seen: new Set(), timer: null };
+  const state = { items: [], filter: 'all', highOnly: false, seen: new Set(), timer: null };
 
   const esc = (s) =>
     String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -23,8 +23,12 @@
   };
 
   function render() {
+    // A headline shows colour only when it is high-impact AND directional.
+    const isColored = (it) => it.impact === 'high' && it.sentiment !== 'neutral';
     const items = state.items.filter(
-      (it) => state.filter === 'all' || it.sentiment === state.filter
+      (it) =>
+        (state.filter === 'all' || it.sentiment === state.filter) &&
+        (!state.highOnly || isColored(it))
     );
     if (!items.length) {
       feed.innerHTML = `<div class="wire-empty">No ${
@@ -80,6 +84,16 @@
       render();
     });
   });
+
+  const highBtn = document.querySelector('[data-wire-toggle="high"]');
+  if (highBtn) {
+    highBtn.addEventListener('click', () => {
+      state.highOnly = !state.highOnly;
+      highBtn.classList.toggle('active', state.highOnly);
+      highBtn.setAttribute('aria-pressed', String(state.highOnly));
+      render();
+    });
+  }
 
   function start() {
     if (state.timer) return;

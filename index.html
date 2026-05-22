@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
-<link rel="stylesheet" href="css/style.css?v=10" />
+<link rel="stylesheet" href="css/style.css?v=12" />
 <link rel="stylesheet" href="css/terminal.css?v=8" />
 <link rel="stylesheet" href="css/ticker.css?v=4" />
 <link rel="stylesheet" href="css/heatmap.css?v=11" />
@@ -321,6 +321,7 @@
           <button class="wire-chip active" data-wire-filter="all">All</button>
           <button class="wire-chip" data-wire-filter="bullish">Bullish</button>
           <button class="wire-chip" data-wire-filter="bearish">Bearish</button>
+          <button class="wire-chip wire-chip-toggle" data-wire-toggle="high" aria-pressed="false">High Impact</button>
         </div>
       </div>
       <div class="wire-feed" id="wire-feed">
@@ -465,7 +466,7 @@
 <script src="js/ticker.js?v=4"></script>
 <script src="js/heatmap.js?v=3"></script>
 <script src="js/heatmap-grid.js?v=6"></script>
-<script src="js/wire.js?v=3"></script>
+<script src="js/wire.js?v=5"></script>
 <script>
   // Mobile: relocate the tab nav out of .header so position:fixed escapes the
   // backdrop-filter containing block and pins to the viewport bottom.

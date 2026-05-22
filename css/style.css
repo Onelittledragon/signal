@@ -1616,7 +1616,7 @@ body.situation-room .geo-risks { max-height: 760px; }
   100% { box-shadow: 0 0 0 0 rgba(48,211,122,0); }
 }
 
-.wire-filters { display: flex; gap: 6px; }
+.wire-filters { display: flex; gap: 6px; flex-wrap: wrap; }
 .wire-chip {
   background: transparent; border: 1px solid var(--line-strong);
   border-radius: 20px; padding: 5px 14px; font-size: 12.5px; font-weight: 500;
@@ -1625,6 +1625,19 @@ body.situation-room .geo-risks { max-height: 760px; }
 }
 .wire-chip:hover { background: var(--bg-alt); color: var(--ink); }
 .wire-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.wire-chip-toggle {
+  margin-left: 8px; display: inline-flex; align-items: center; gap: 6px;
+}
+.wire-chip-toggle::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ink-mute); transition: background 0.15s ease;
+}
+.wire-chip-toggle.active {
+  background: var(--amber-soft); color: var(--amber);
+  border-color: var(--amber);
+}
+.wire-chip-toggle.active::before { background: var(--amber); }
 
 .wire-feed {
   border: 1px solid var(--line); border-radius: var(--radius);
