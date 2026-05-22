@@ -1587,3 +1587,93 @@ body.situation-room .geo-risks { max-height: 760px; }
   .country-panel { width: calc(100% - 24px); top: 8px; right: 12px; left: 12px; }
 }
 
+/* ============================== 24/7 WIRE ============================== */
+.wire-root { max-width: 880px; margin: 0 auto; }
+
+.wire-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.wire-head-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.wire-head-title h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.wire-head-sub { font-size: 13px; color: var(--ink-mute); }
+
+.wire-live {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; color: var(--bull);
+  padding: 3px 9px; border: 1px solid var(--bull-soft);
+  border-radius: 6px; background: var(--bull-soft);
+}
+.wire-live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--bull); box-shadow: 0 0 0 0 var(--bull);
+  animation: wirePulse 1.6s infinite;
+}
+@keyframes wirePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(48,211,122,0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(48,211,122,0); }
+  100% { box-shadow: 0 0 0 0 rgba(48,211,122,0); }
+}
+
+.wire-filters { display: flex; gap: 6px; }
+.wire-chip {
+  background: transparent; border: 1px solid var(--line-strong);
+  border-radius: 20px; padding: 5px 14px; font-size: 12.5px; font-weight: 500;
+  color: var(--ink-soft); cursor: pointer; transition: all 0.15s ease;
+  font-family: inherit;
+}
+.wire-chip:hover { background: var(--bg-alt); color: var(--ink); }
+.wire-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.wire-feed {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-card); overflow: hidden;
+}
+.wire-item {
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 11px 16px; border-bottom: 1px solid var(--line);
+  text-decoration: none; transition: background 0.14s ease;
+}
+.wire-item:last-child { border-bottom: none; }
+.wire-item:hover { background: var(--bg-alt); }
+
+.wire-time {
+  flex: none; font-family: var(--mono); font-size: 12px;
+  color: var(--ink-mute); font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+.wire-headline {
+  flex: 1; font-size: 14.5px; line-height: 1.45; font-weight: 500;
+  color: var(--ink);
+}
+.wire-item--bull .wire-headline { color: var(--bull); font-weight: 600; }
+.wire-item--bear .wire-headline { color: var(--bear); font-weight: 600; }
+.wire-source {
+  flex: none; font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-mute);
+  align-self: center; max-width: 130px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+
+.wire-item--new { animation: wireIn 0.5s ease; }
+@keyframes wireIn {
+  0%   { background: var(--amber-soft); opacity: 0; transform: translateY(-6px); }
+  100% { background: transparent; opacity: 1; transform: translateY(0); }
+}
+
+.wire-empty {
+  padding: 32px 16px; text-align: center; color: var(--ink-mute);
+  font-size: 13.5px;
+}
+.wire-foot {
+  margin-top: 12px; font-family: var(--mono); font-size: 11.5px;
+  color: var(--ink-mute); text-align: center;
+}
+
+@media (max-width: 560px) {
+  .wire-item { flex-wrap: wrap; gap: 4px 12px; }
+  .wire-source { order: 3; align-self: auto; }
+  .wire-headline { flex-basis: 100%; order: 2; }
+}
+
