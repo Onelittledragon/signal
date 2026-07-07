@@ -349,16 +349,22 @@
     $('#term-last').textContent = fmtClock(state.lastUpdate || now);
     $('#term-latency').textContent = state.latencyMs == null ? '--ms' : `${state.latencyMs}ms`;
     const conn = $('#term-conn');
-    if (state.quotes.size > 0) {
+    if ((state.quoteFails || 0) >= 3) {
+      // Repeated fetch failures — the table is stale; say so instead of
+      // claiming a live connection.
+      conn.textContent = 'STALE — RECONNECTING';
+      conn.classList.remove('t-green'); conn.classList.add('t-red');
+    } else if (state.quotes.size > 0) {
       conn.textContent = 'CONNECTED';
       conn.classList.remove('t-red'); conn.classList.add('t-green');
     } else {
       conn.textContent = 'CONNECTING…';
     }
-    // Market status (NYSE 9:30-16:00 ET ≈ 13:30-20:00 UTC, Mon-Fri)
-    const utcDay = now.getUTCDay();
-    const utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const open = utcDay >= 1 && utcDay <= 5 && utcMin >= 13*60+30 && utcMin < 20*60;
+    // Market status — computed in America/New_York so DST never skews it.
+    const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const etDay = et.getDay();
+    const etMin = et.getHours() * 60 + et.getMinutes();
+    const open = etDay >= 1 && etDay <= 5 && etMin >= 9 * 60 + 30 && etMin < 16 * 60;
     const mk = $('#term-mkt-status');
     if (mk) {
       mk.textContent = open ? 'OPEN' : 'CLOSED';
@@ -385,6 +391,7 @@
       state.quotes = next;
       state.latencyMs = Math.round(performance.now() - t0);
       state.lastUpdate = j.ts ? new Date(j.ts) : new Date();
+      state.quoteFails = 0;
       cacheSave();
       renderTable();
       renderTicker();
@@ -393,7 +400,9 @@
     } catch (e) {
       // Soft-fail — keep whatever quotes we already had. Next tick retries.
       state.latencyMs = Math.round(performance.now() - t0);
+      state.quoteFails = (state.quoteFails || 0) + 1;
       renderStatus();
+      window.dispatchEvent(new CustomEvent('signal:quotes-error', { detail: { fails: state.quoteFails } }));
     }
   }
 
@@ -489,9 +498,10 @@
     }
 
     if (lower === 'eval') {
-      // Mocked prop-firm eval status — values are illustrative.
+      // Mocked prop-firm eval status — labelled DEMO so it can never be
+      // mistaken for live account data.
       const lines = [
-        '<span class="t-amber">PROP FIRM EVALUATION STATUS</span>',
+        '<span class="t-amber">PROP FIRM EVALUATION STATUS</span> <span class="t-red">[DEMO — SAMPLE DATA, NOT LIVE]</span>',
         '<span class="out-divider">═══════════════════════════════════════════════</span>',
         fmtRowLine('ACCOUNT',         'FTMO 100K · PHASE 1'),
         fmtRowLine('DAYS ELAPSED',    '14 / 30'),

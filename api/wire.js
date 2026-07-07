@@ -5,9 +5,11 @@
 
 export const config = { runtime: 'edge' };
 
+// Finnhub is optional extra coverage — set FINNHUB_API_KEY in Vercel to
+// enable it. Never hardcode the key: this repo is public. Without it the
+// wire runs on the RSS sources below.
 const FINNHUB_KEY =
-  (typeof process !== 'undefined' && process.env && process.env.FINNHUB_API_KEY) ||
-  'd87rok9r01qmhakh41d0d87rok9r01qmhakh41dg';
+  (typeof process !== 'undefined' && process.env && process.env.FINNHUB_API_KEY) || '';
 
 const FINNHUB_CATEGORIES = ['general', 'forex', 'merger', 'crypto'];
 
@@ -180,6 +182,19 @@ function extract(block, tag) {
   return m ? m[1] : '';
 }
 
+// Some feeds (Investing.com) send timezone-naive pubDates like
+// "2026-07-07 16:26:34" — JS parses those as SERVER-LOCAL time, which skews
+// every timestamp by the host's UTC offset. Treat naive stamps as UTC, and
+// clamp anything still in the future to "now" (= when it hit our wire).
+function parseDateUTC(dateStr) {
+  const s = String(dateStr || '').trim();
+  if (!s) return NaN;
+  const naive = s.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})$/);
+  let t = naive ? Date.parse(`${naive[1]}T${naive[2]}Z`) : Date.parse(s);
+  if (Number.isFinite(t) && t > Date.now() + 2 * 60 * 1000) t = Date.now();
+  return t;
+}
+
 function parseFeed(xml, source) {
   const items = [];
   const blocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) ||
@@ -193,7 +208,8 @@ function parseFeed(xml, source) {
       if (m) link = m[1];
     }
     const dateStr = extract(b, 'pubDate') || extract(b, 'updated') || extract(b, 'published') || '';
-    const time = new Date(dateStr || Date.now()).getTime();
+    const time = parseDateUTC(dateStr);
+    if (!Number.isFinite(time)) continue;
     const summary = stripTags(extract(b, 'description') || extract(b, 'summary') || extract(b, 'content'));
     items.push({ headline: title, url: link, source, time, summary });
   }
@@ -235,7 +251,7 @@ async function fetchFinnhub(cat) {
 export default async function handler() {
   try {
     const tasks = [
-      ...FINNHUB_CATEGORIES.map(fetchFinnhub),
+      ...(FINNHUB_KEY ? FINNHUB_CATEGORIES.map(fetchFinnhub) : []),
       ...RSS_FEEDS.map(fetchRss),
     ];
     const results = await Promise.allSettled(tasks);

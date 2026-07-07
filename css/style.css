@@ -13,8 +13,28 @@
   --bear-soft: rgba(241, 74, 62, 0.14);
   --amber: #E5A33A;
   --amber-soft: rgba(229, 163, 58, 0.14);
-  --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 36px rgba(0,0,0,0.45);
+
+  /* Depth — three elevation layers, always paired with a hairline border */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.25);
+  --shadow-2: 0 1px 2px rgba(0,0,0,0.35), 0 12px 36px rgba(0,0,0,0.45);
+  --shadow-3: 0 2px 4px rgba(0,0,0,0.40), 0 24px 64px rgba(0,0,0,0.55);
+  --shadow: var(--shadow-2);
+
+  /* Spacing — 8px system */
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s5: 40px; --s6: 48px; --s8: 64px;
+
+  /* Type scale — page title > section header > body > meta */
+  --fs-2xs: 10.5px;
+  --fs-xs: 11.5px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 30px;
+  --fs-hero: clamp(30px, 4.2vw, 46px);
+
   --radius: 14px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
 }
@@ -35,6 +55,22 @@ html, body {
   overscroll-behavior-y: none;
 }
 body { overflow-x: hidden; }
+
+/* Film grain — a whisper of texture so dark surfaces read as material,
+   not dead pixels. Kept under the neon layer, above the background. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: overlay;
+}
+body.heatmap-mode::before, body.terminal-mode::before { display: none; }
+
 a { color: inherit; text-decoration: none; }
 button, a, .chip, .tab-btn, .gc-btn, .refresh-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 button { font-family: inherit; }
@@ -60,7 +96,34 @@ button { font-family: inherit; }
   align-items: center;
   gap: 32px;
 }
-.brand { display: none !important; }   /* logo removed per design */
+/* SIGNAL 2.0 logo mark — radio-pulse glyph + wordmark */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.brand:hover { opacity: 0.85; }
+.brand:active { transform: scale(0.96); }
+.brand-glyph { display: grid; place-items: center; }
+.brand-glyph svg { display: block; }
+.brand-glyph .bg-tile { fill: var(--bg-alt); stroke: var(--line-strong); stroke-width: 1; }
+.brand-glyph .bg-dot { fill: var(--bull); }
+.brand-glyph .bg-wave { fill: none; stroke: var(--bull); stroke-width: 2.2; stroke-linecap: round; }
+.brand-glyph .bg-wave-far { opacity: 0.45; }
+body.mood-bear .brand-glyph .bg-dot,
+body.mood-bear .brand-glyph .bg-wave { fill: none; stroke: var(--bear); }
+body.mood-bear .brand-glyph .bg-dot { fill: var(--bear); }
+.brand-word {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: var(--ink);
+  margin-right: 4px;
+}
 .brand-mark { width: 28px; height: 28px; border-radius: 20%; background: #000; color: #00FF41; display: grid; place-items: center; font-size: 11px; font-weight: 900; font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; line-height: 1; }
 .brand-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--bull); animation: pulse 2s infinite; }
 @keyframes pulse {
@@ -75,7 +138,8 @@ button { font-family: inherit; }
 .tab-btn { background: none; border: none; padding: 0; width: 40px; height: 40px; border-radius: 11px; color: var(--ink-soft); cursor: pointer; transition: all 0.18s ease; display: inline-grid; place-items: center; }
 .tab-btn .tab-ico { width: 22px; height: 22px; display: block; }
 .tab-label { display: none; }   /* labels appear only in the mobile bottom bar */
-.tab-btn:hover { background: var(--bg-alt); color: var(--ink); }
+.tab-btn:hover { background: var(--bg-alt); color: var(--ink); transform: translateY(-1px); }
+.tab-btn:active { transform: scale(0.92); }
 .tab-btn.active { background: var(--ink); color: var(--bg); box-shadow: 0 4px 14px rgba(26,29,35,0.18); }
 .tab-btn.active .tab-ico { transform: scale(1.04); }
 .header-meta { display: flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-mute); }
@@ -93,10 +157,10 @@ button { font-family: inherit; }
 /* Layout */
 .page { max-width: 1320px; margin: 0 auto; padding: 36px 28px 80px; }
 .tab-panel { display: none; }
-.tab-panel.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.22,1,0.36,1); }
+.tab-panel.active { display: block; animation: fadeIn 0.42s var(--ease-out); }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .page-head { margin-bottom: 28px; }
 .page-head .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 10px; }
@@ -1258,6 +1322,7 @@ body.situation-room .geo-risks { max-height: 760px; }
 }
 .tw-chip:hover { background: var(--bg-alt); color: var(--ink); }
 .tw-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tw-chip-divider { width: 1px; align-self: stretch; margin: 4px 4px; background: var(--line-strong); }
 
 .tw-feed {
   background: var(--bg-card);
@@ -1696,3 +1761,80 @@ body.situation-room .geo-risks { max-height: 760px; }
   .wire-headline { flex-basis: 100%; order: 2; }
 }
 
+
+/* ======================================================================
+   SIGNAL 2.0 — polish layer
+   Depth, press feedback, source dots, skeleton rows, live stamps.
+   ====================================================================== */
+
+/* Layered depth on every primary surface */
+.card, .tw-card, .tw-feed, .wire-feed, .geo-map, .geo-metrics, .news-feed {
+  box-shadow: var(--shadow-1);
+}
+.tm-hero { box-shadow: var(--shadow-2); }
+
+/* Satisfying press feedback on every interactive control */
+.chip:active, .tw-chip:active, .wire-chip:active, .geo-chip:active,
+.gc-btn:active, .term-q:active, .hm-zoom-btn:active { transform: scale(0.94); }
+.chip, .tw-chip, .wire-chip { cursor: pointer; min-height: 32px; }
+.tw-trend:active, .risk-card:active { transform: scale(0.99); }
+
+/* Keyboard focus is visible everywhere */
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--bull);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* News post source dot — consistent scanning anchor */
+.tw-src-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px var(--bg-card);
+}
+
+/* Feed skeleton rows */
+.tw-post-skel { pointer-events: none; }
+.tw-post-skel .skel-line { height: 11px; margin: 7px 0; }
+
+/* Live "updated" stamps tick — subtle, mono, never shouty */
+.feed-updated { color: var(--ink-mute); }
+
+/* Headline links get a real hover affordance */
+.tw-title a:hover, .tw-title-hero a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.wire-item:hover .wire-headline { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Wire skeleton rows */
+.wire-skel-row {
+  display: flex; gap: 14px; align-items: baseline;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+}
+
+/* Respect users who turn animation off */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Wire sentiment tag — fixed column so rows scan as a grid */
+.wire-item { display: grid; grid-template-columns: 78px minmax(0,1fr) 46px 110px; align-items: baseline; }
+.wire-sent {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.1em; text-align: center;
+  border-radius: 4px; padding: 2px 0;
+  justify-self: center; width: 42px;
+}
+.wire-sent--bull { background: var(--bull-soft); color: var(--bull); }
+.wire-sent--bear { background: var(--bear-soft); color: var(--bear); }
+.wire-sent--flat { color: var(--ink-mute); }
+.wire-source { text-align: right; }
+@media (max-width: 560px) {
+  .wire-item { grid-template-columns: 64px 1fr auto; grid-template-rows: auto auto; }
+  .wire-headline { grid-column: 1 / -1; grid-row: 2; }
+  .wire-sent { justify-self: start; }
+  .wire-source { grid-column: 3; grid-row: 1; }
+}

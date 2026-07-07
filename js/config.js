@@ -1,8 +1,9 @@
 // SIGNAL configuration
 // ---------------------------------------------------------------------------
-// Paste your Anthropic API key below to enable live Claude-powered
-// geopolitical risk generation. Without a key the Geopolitical tab falls
-// back to a cached briefing.
+// The live geopolitical briefing is generated server-side by /api/geo using
+// the ANTHROPIC_API_KEY environment variable (set it in Vercel). Pasting a
+// key below overrides that with direct-from-browser calls — local dev only;
+// never commit a key here.
 //
 // Get a key: https://console.anthropic.com/
 window.SIGNAL_CONFIG = {

@@ -1,0 +1,405 @@
+/* ======================================================================
+   SIGNAL 2.0 — COMMAND DECK
+   Hero trade verdict, Fear & Greed gauge, economic calendar,
+   plus the shared data-error / last-updated components.
+   ====================================================================== */
+
+.deck {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: var(--s3, 24px);
+  margin-bottom: var(--s4, 32px);
+  align-items: stretch;
+}
+
+/* ---------------- Hero verdict ---------------- */
+.deck-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2, var(--shadow));
+  padding: 28px 32px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 300px;
+}
+.deck-hero-skel { display: flex; flex-direction: column; align-items: flex-start; }
+
+/* verdict-tinted ambient glow inside the card */
+.deck-hero::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(ellipse 60% 50% at 30% 40%, var(--verdict-glow, transparent) 0%, transparent 70%);
+  opacity: 0.55;
+  pointer-events: none;
+  transition: background 1s ease;
+}
+.deck-hero.v-trade   { --verdict-c: var(--bull);  --verdict-soft: var(--bull-soft);  --verdict-glow: rgba(48,211,122,0.22); border-color: rgba(48,211,122,0.35); }
+.deck-hero.v-caution { --verdict-c: var(--amber); --verdict-soft: var(--amber-soft); --verdict-glow: rgba(229,163,58,0.20); border-color: rgba(229,163,58,0.35); }
+.deck-hero.v-avoid   { --verdict-c: var(--bear);  --verdict-soft: var(--bear-soft);  --verdict-glow: rgba(241,74,62,0.26); border-color: rgba(241,74,62,0.45); }
+
+.deck-hero-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.deck-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 10.5px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.deck-live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--verdict-c, var(--bull));
+  animation: deckPulse 1.8s ease-in-out infinite;
+}
+@keyframes deckPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--verdict-soft, rgba(48,211,122,0.4)); opacity: 1; }
+  50% { box-shadow: 0 0 0 7px transparent; opacity: 0.55; }
+}
+.deck-hero-updated {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 10.5px);
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+}
+
+.deck-verdict {
+  position: relative;
+  font-family: var(--mono);
+  font-size: clamp(52px, 6.5vw, 84px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  color: var(--verdict-c, var(--ink));
+  text-shadow: 0 0 24px var(--verdict-glow, transparent);
+  animation: verdictGlow 2.6s ease-in-out infinite;
+  margin: 6px 0 4px;
+}
+@keyframes verdictGlow {
+  0%, 100% { text-shadow: 0 0 18px var(--verdict-glow, transparent); }
+  50%      { text-shadow: 0 0 44px var(--verdict-glow, transparent), 0 0 90px var(--verdict-glow, transparent); }
+}
+.deck-hero.v-avoid .deck-verdict { animation-duration: 1.4s; }
+
+.deck-verdict-sub {
+  position: relative;
+  font-size: var(--fs-md, 15px);
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+  max-width: 56ch;
+}
+.deck-verdict-sub strong { color: var(--ink); font-weight: 600; }
+
+/* Bull/bear pressure meter */
+.deck-pressure { position: relative; margin-bottom: 16px; }
+.deck-pressure-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  overflow: hidden;
+  display: flex;
+}
+.deck-pressure-bull, .deck-pressure-bear {
+  height: 100%;
+  transition: width 900ms cubic-bezier(0.22,1,0.36,1);
+}
+.deck-pressure-bull { background: var(--bull); border-radius: 999px 0 0 999px; }
+.deck-pressure-bear { background: var(--bear); border-radius: 0 999px 999px 0; margin-left: 2px; }
+.deck-pressure-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 10.5px);
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+.deck-pressure-legend .p-bull { color: var(--bull); }
+.deck-pressure-legend .p-bear { color: var(--bear); }
+
+/* Why chips */
+.deck-why {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.deck-why-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-xs, 11.5px);
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.deck-why-chip::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ink-mute);
+}
+.deck-why-chip.w-bull::before  { background: var(--bull); }
+.deck-why-chip.w-bear::before  { background: var(--bear); }
+.deck-why-chip.w-amber::before { background: var(--amber); }
+
+/* ---------------- Generic deck card ---------------- */
+.deck-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1, none);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.deck-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.deck-card-title {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.deck-card-meta {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 10.5px);
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+}
+.deck-skel-center { display: grid; place-items: center; padding: 24px 0; }
+
+/* ---------------- Fear & Greed gauge ---------------- */
+.fng-gauge-wrap { position: relative; max-width: 280px; margin: 0 auto; width: 100%; }
+.fng-svg { width: 100%; height: auto; display: block; }
+.fng-needle-g { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.5, 1); transform-origin: 130px 118px; }
+.fng-center {
+  position: absolute;
+  left: 50%;
+  top: 74%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.fng-value {
+  font-family: var(--mono);
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fng-rating {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs, 10px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.fng-rating.band-0 { background: var(--bear-soft);  color: var(--bear); }
+.fng-rating.band-1 { background: rgba(229,163,58,0.16); color: #ECA75C; }
+.fng-rating.band-2 { background: var(--amber-soft); color: var(--amber); }
+.fng-rating.band-3 { background: rgba(48,211,122,0.12); color: #7BD9A4; }
+.fng-rating.band-4 { background: var(--bull-soft);  color: var(--bull); }
+.fng-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  margin: 4px 2px 0;
+}
+.fng-history {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.fng-hist-item { text-align: center; }
+.fng-hist-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink-mute); }
+.fng-hist-val { font-family: var(--mono); font-size: 15px; font-weight: 700; margin-top: 3px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fng-spark { margin-top: 14px; }
+.fng-spark svg { width: 100%; height: 36px; display: block; }
+.fng-spark-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  color: var(--ink-mute); margin-bottom: 4px; text-transform: uppercase;
+}
+
+/* ---------------- Economic calendar (sidebar card) ---------------- */
+.tw-card-head-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cal-skel { display: flex; flex-direction: column; gap: 10px; padding: 6px 0; }
+.cal-day {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 2px;
+}
+.cal-day:first-child { padding-top: 0; }
+.cal-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 9px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease;
+}
+.cal-row:hover { background: var(--bg-alt); }
+.cal-row.imp-high {
+  border-left-color: var(--bear);
+  background: rgba(241,74,62,0.06);
+}
+.cal-row.imp-high:hover { background: rgba(241,74,62,0.11); }
+.cal-row.imp-medium { border-left-color: var(--amber); }
+.cal-row.imp-low { opacity: 0.75; }
+.cal-time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cal-row.imp-high .cal-time { color: var(--ink); font-weight: 600; }
+.cal-main { min-width: 0; }
+.cal-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+.cal-row.imp-high .cal-name { color: var(--ink); font-weight: 700; font-size: 13px; }
+.cal-row.imp-medium .cal-name { color: var(--ink); }
+.cal-fx {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+.cal-fx b { color: var(--ink-soft); font-weight: 600; }
+.cal-impact { display: inline-flex; gap: 3px; align-items: center; align-self: center; }
+.cal-impact i {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  display: inline-block;
+}
+.cal-impact i:nth-child(1) { height: 6px; }
+.cal-impact i:nth-child(2) { height: 9px; }
+.cal-impact i:nth-child(3) { height: 12px; }
+.cal-row.imp-low    .cal-impact i:nth-child(1) { background: var(--bull); }
+.cal-row.imp-medium .cal-impact i:nth-child(-n+2) { background: var(--amber); }
+.cal-row.imp-high   .cal-impact i { background: var(--bear); box-shadow: 0 0 6px rgba(241,74,62,0.5); }
+.cal-country {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.cal-row.imp-high .cal-country { color: var(--ink-soft); border-color: var(--ink-mute); }
+.cal-next {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  white-space: nowrap;
+}
+.cal-empty { color: var(--ink-mute); font-size: 12.5px; padding: 8px 0; }
+
+/* ---------------- Shared: data error state ---------------- */
+.data-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--ink-mute);
+  font-size: 13px;
+}
+.data-error-ico {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--bg-alt);
+  border: 1px solid var(--line-strong);
+  color: var(--amber);
+  font-size: 16px;
+  font-family: var(--mono);
+}
+.data-error-title { color: var(--ink-soft); font-weight: 600; font-size: 13.5px; }
+.data-error-retry {
+  margin-top: 2px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.data-error-retry:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.data-error-retry:active { transform: scale(0.95); }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1020px) {
+  .deck { grid-template-columns: 1fr; }
+  .deck-hero { min-height: 240px; }
+}
+@media (max-width: 760px) {
+  .deck { gap: 14px; margin-bottom: 20px; }
+  .deck-hero { padding: 20px 18px; min-height: 210px; }
+  .deck-verdict { font-size: clamp(44px, 14vw, 60px); }
+  .deck-verdict-sub { font-size: 14px; margin-bottom: 14px; }
+  .deck-card { padding: 16px 16px; }
+  .fng-value { font-size: 34px; }
+}

@@ -6,6 +6,8 @@
   const state = {
     news: [],
     geo: null,
+    geoError: null,
+    geoFetchedAt: 0,
     mood: null,       // { mood: "bull" | "bear", intensity: 0..1, label, score }
     updated: null,
     world: null,
@@ -230,10 +232,20 @@
     return (topic + sentimentBoost + recency) * srcMult * lenMult;
   }
 
-  // ---- Claude geopolitical briefing ------------------------------------
+  // ---- Live geopolitical briefing ---------------------------------------
+  // Server-side /api/geo (Claude behind an edge cache) is the primary source.
+  // A client-side CLAUDE_API_KEY in config.js overrides it for local dev.
+  async function fetchGeoServer() {
+    const r = await fetch("/api/geo", { cache: "no-store" });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ("geo " + r.status));
+    if (!Array.isArray(j.risks) || !j.risks.length) throw new Error("geo empty");
+    return j;
+  }
+
   async function fetchGeopolitical(newsContext) {
     const key = CFG.CLAUDE_API_KEY;
-    if (!key) return null;
+    if (!key) return fetchGeoServer();
     const newsBlob = (newsContext || []).slice(0, 15)
       .map((n) => `- [${n.source}] ${n.title}`).join("\n");
     const system = "You are a senior geopolitical risk analyst producing a daily briefing for US equity index futures traders (NQ, ES). Return ONLY valid JSON matching the requested schema. No prose outside JSON.";
@@ -287,25 +299,9 @@ Return JSON with this exact shape:
     return JSON.parse(jsonStr);
   }
 
-  // Cached briefing — used when no API key is configured.
-  const CACHED_GEO = {
-    risks: [
-      { region: "Eastern Europe", title: "Ukraine–Russia front line",      severity: "high",   lat: 49.0, lng: 36.0, desc: "Extended-range strikes on energy and port infrastructure continue. Black Sea grain corridor remains under intermittent closure.", impact: "Oil +, Defense +, EU equities -" },
-      { region: "Middle East",    title: "Red Sea shipping disruption",    severity: "high",   lat: 15.5, lng: 42.5, desc: "Persistent attacks on Suez-bound vessels keep Cape of Good Hope diversions in place. Marine insurance premia still elevated for Gulf transit.", impact: "Tankers +, Brent +, Retail margins -" },
-      { region: "Asia-Pacific",   title: "Taiwan Strait tensions",         severity: "medium", lat: 24.0, lng: 120.0, desc: "PLA incursions across the median line remain routine. Semiconductor supply chain exposure keeps tail-risk premium bid in NVDA/TSM options.", impact: "Semis vol +, JPY bid on headlines" },
-      { region: "Central Asia",   title: "Strait of Hormuz patrols",       severity: "medium", lat: 26.6, lng: 56.2, desc: "Increased IRGC naval activity and vessel seizures lifting Gulf crude insurance rates. No full closure, but headline risk is high.", impact: "Brent +, Gulf shipping -" },
-      { region: "North America",  title: "US election policy uncertainty", severity: "medium", lat: 38.9, lng: -77.0, desc: "Divergent tariff and tax platforms now showing up in sector-level options skew, particularly autos and China-exposed tech.", impact: "Sector rotation risk" },
-      { region: "Africa",         title: "Sahel instability",              severity: "low",    lat: 15.0, lng: 0.0, desc: "Political transitions in Sahelian states continue to pressure uranium and gold exports — marginal driver for spot markets.", impact: "Uranium +, EU utilities -" },
-    ],
-    matrix: [
-      { asset: "ES / NQ Futures",   read: "Headline-sensitive; tail-risk premia elevated",   tone: "amber" },
-      { asset: "Crude Oil (CL)",    read: "Bid on supply-corridor risk (Red Sea, Hormuz)",   tone: "bear" },
-      { asset: "Gold",              read: "Haven demand firm; buy-the-dip bias intact",      tone: "bull" },
-      { asset: "USD (DXY)",         read: "Two-way risk; firm on acute escalation only",     tone: "amber" },
-      { asset: "Defense equities",  read: "Structural bid while conflicts remain active",     tone: "bull" },
-      { asset: "EM FX",             read: "Under pressure from risk-off positioning",         tone: "bear" },
-    ],
-  };
+  // NO canned fallback briefing. If the live source is unreachable the World
+  // tab says so plainly — stale intelligence presented as live is worse than
+  // an honest outage.
 
   // ---- Mood: drives the neon page tint --------------------------------
   // This is a FORECAST read, not a live-tape read. It estimates where
@@ -415,12 +411,18 @@ Return JSON with this exact shape:
     }
     const eb = $("#signal-mood-label");
     if (eb) eb.textContent = m.label;
+
+    // Feed the command deck (hero TRADE/CAUTION/AVOID verdict).
+    window.dispatchEvent(new CustomEvent("signal:mood", { detail: m }));
   }
 
   const badgeFor = (s) => s === "bullish" ? "badge-bull" : s === "bearish" ? "badge-bear" : "badge-neutral";
 
   // ---- Render: News (Twitter-style feed) -------------------------------
   let newsFilter = "all";
+  // Display sort. state.news stays impact-ranked (canonical — mood and the
+  // pinned post depend on it); "latest" re-sorts only the visible list.
+  let newsSort = "latest";
 
   const avatarFor = (src) => {
     const s = String(src || "?").trim();
@@ -458,6 +460,7 @@ Return JSON with this exact shape:
         <div class="tw-post-row">
           <div class="tw-post-main">
             <div class="tw-post-head">
+              <span class="tw-src-dot" style="background:hsl(${av.hue} 55% 55%)" aria-hidden="true"></span>
               <span class="tw-name">${esc(n.source)}</span>
               ${verified ? `<svg class="tw-verified" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.5 12.5l-2-2.3.3-3-3-.6L16.3 4l-2.8 1.2L11 3.4 8.7 5.2 5.9 4 4.5 6.6l-3 .6.3 3-2 2.3 2 2.3-.3 3 3 .6 1.2 2.6 2.8-1.2 2.5 1.8 2.3-1.8 2.8 1.2 1.5-2.6 3-.6-.3-3zM10.6 16.6l-3.8-3.8 1.5-1.5 2.3 2.3 5.3-5.3 1.5 1.5z"/></svg>` : ""}
               <span class="tw-handle">${esc(handleFor(n.source))}</span>
@@ -489,14 +492,15 @@ Return JSON with this exact shape:
     $("#news-sources").textContent = `${sources.size} sources`;
 
     if (!state.news.length) {
-      feed.innerHTML = `<div class="tw-empty">Live wire feeds are being scored for market impact. Stories will appear here ranked by projected NQ/ES effect.</div>`;
+      feed.innerHTML = feedSkeleton(5);
       $("#news-count").textContent = 0;
       applyMood();
       return;
     }
 
     const top = state.news[0];
-    const rest = state.news.slice(1);
+    let rest = state.news.slice(1);
+    if (newsSort === "latest") rest = [...rest].sort((a, b) => b.time - a.time);
     const filtered = rest.filter((n) => newsFilter === "all" ? true : n.sentiment === newsFilter);
     const showTop = newsFilter === "all" || top.sentiment === newsFilter;
 
@@ -524,19 +528,64 @@ Return JSON with this exact shape:
     }
     const bullN = state.news.filter((n) => n.sentiment === "bullish").length;
     const bearN = state.news.filter((n) => n.sentiment === "bearish").length;
-    const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-    setText("#tw-bull", bullN);
-    setText("#tw-bear", bearN);
-    setText("#tw-sources-n", sources.size);
+    const count = (id, v) => {
+      const el = $(id); if (!el) return;
+      if (window.SignalDeck) window.SignalDeck.countUp(el, v, { duration: 700 });
+      else el.textContent = v;
+    };
+    count("#tw-bull", bullN);
+    count("#tw-bear", bearN);
+    count("#tw-sources-n", sources.size);
 
     applyMood();
   }
 
   function renderTopMover() { /* superseded by Twitter-style feed; pinned post handles this */ }
 
+  // Shimmer placeholder rows shown while the first news fetch is in flight.
+  function feedSkeleton(n = 5) {
+    const row = `
+      <div class="tw-post tw-post-skel">
+        <div class="tw-post-head">
+          <span class="skel" style="width:10px;height:10px;border-radius:50%"></span>
+          <span class="skel" style="width:110px"></span>
+          <span class="skel" style="width:60px"></span>
+        </div>
+        <div class="skel skel-line" style="width:88%;height:14px"></div>
+        <div class="skel skel-line" style="width:96%"></div>
+        <div class="skel skel-line" style="width:64%"></div>
+      </div>`;
+    return row.repeat(n);
+  }
+
+  // Clean failure card with a retry button — never a blank box.
+  function feedError() {
+    const feed = $("#tw-feed");
+    if (!feed) return;
+    feed.innerHTML = `
+      <div class="data-error">
+        <div class="data-error-ico">!</div>
+        <div>
+          <div class="data-error-title">News wire unavailable</div>
+          <div>The feed could not be reached. Auto-retry in 60s.</div>
+        </div>
+        <button class="data-error-retry" type="button">Retry now</button>
+      </div>`;
+    feed.querySelector(".data-error-retry").addEventListener("click", () => refresh(false));
+  }
+
   $$("[data-filter]").forEach((btn) => btn.addEventListener("click", () => {
     newsFilter = btn.dataset.filter;
     $$("[data-filter]").forEach((b) => b.classList.toggle("active", b === btn));
+    renderNews();
+  }));
+  $$("[data-sort]").forEach((btn) => btn.addEventListener("click", () => {
+    newsSort = btn.dataset.sort;
+    $$("[data-sort]").forEach((b) => b.classList.toggle("active", b === btn));
+    const sub = $("#tw-head-sub");
+    if (sub) sub.textContent = newsSort === "latest"
+      ? "Live wire · newest first · top impact pinned"
+      : "Live wire · ranked by market impact";
     renderNews();
   }));
 
@@ -636,7 +685,11 @@ Return JSON with this exact shape:
         try {
           const topo = await proxiedFetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", { json: true });
           state.world = topojson.feature(topo, topo.objects.countries);
-        } catch (e2) { console.warn("world atlas fallback failed", e2); }
+        } catch (e2) {
+          console.warn("world atlas fallback failed", e2);
+          const cap = $("#active-risk-title");
+          if (cap) cap.textContent = "MAP DATA OFFLINE — PINS STILL LIVE";
+        }
       }
     }
 
@@ -1255,12 +1308,45 @@ Return JSON with this EXACT shape, nothing else:
   const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
 
   // ---- Render: Geopolitical sidebar + matrix ---------------------------
+  // Honest offline state — shown when the live briefing cannot be fetched.
+  // The globe and the (real) news ticker stay live; nothing is faked.
+  function renderGeoOffline(reason) {
+    const host = $("#geo-risks");
+    const matrix = $("#impact-matrix");
+    const countLive = $("#geo-count-live");
+    if (countLive) countLive.textContent = "BRIEFING OFFLINE";
+    const cap = $("#active-risk-title");
+    if (cap) cap.textContent = "LIVE BRIEFING UNAVAILABLE";
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    set("#metric-index", "—");
+    set("#metric-index-sub", "OFFLINE");
+    set("#metric-high", "—"); set("#metric-med", "—"); set("#metric-low", "—");
+    const fill = $("#metric-index-fill");
+    if (fill) fill.style.width = "0%";
+    if (host) {
+      host.innerHTML = `
+        <div class="data-error">
+          <div class="data-error-ico">!</div>
+          <div>
+            <div class="data-error-title">Live briefing unavailable</div>
+            <div>${esc(reason === "not_configured"
+              ? "The geopolitical desk needs an ANTHROPIC_API_KEY on the server. No cached or placeholder data is shown."
+              : "The intelligence feed could not be reached. Retrying automatically.")}</div>
+          </div>
+          <button class="data-error-retry" type="button">Retry now</button>
+        </div>`;
+      host.querySelector(".data-error-retry").addEventListener("click", () => refreshGeo(true));
+    }
+    if (matrix) matrix.innerHTML = `<div style="color:var(--ink-mute)">Impact matrix unavailable — no live briefing.</div>`;
+  }
+
   function renderGeopolitical() {
     const host = $("#geo-risks");
     const matrix = $("#impact-matrix");
     const countLive = $("#geo-count-live");
 
     if (!state.geo) {
+      if (state.geoError) { renderGeoOffline(state.geoError); return; }
       host.innerHTML = `<div class="card"><div class="loading-dots"><span></span><span></span><span></span></div><span style="margin-left:10px;color:var(--ink-mute);font-size:13px">Acquiring intelligence feed…</span></div>`;
       matrix.innerHTML = `<div style="color:var(--ink-mute)">Awaiting briefing…</div>`;
       countLive.textContent = "—";
@@ -1310,34 +1396,48 @@ Return JSON with this EXACT shape, nothing else:
   }
 
   // ---- Orchestration ---------------------------------------------------
+  // Geopolitical briefing — live only. Refetched at most every 15 min (the
+  // endpoint is edge-cached for 30), or immediately on manual retry.
+  const GEO_REFRESH_MS = 15 * 60 * 1000;
+  async function refreshGeo(force) {
+    const fresh = state.geoFetchedAt && (Date.now() - state.geoFetchedAt) < GEO_REFRESH_MS;
+    if (!force && fresh) return;
+    if (!state.geo) renderGeopolitical(); // loading state
+    try {
+      const geo = await fetchGeopolitical(state.news);
+      if (geo && Array.isArray(geo.risks)) {
+        state.geo = geo;
+        state.geoError = null;
+        state.geoFetchedAt = Date.now();
+        const tsEl = $("#geo-briefing-ts");
+        if (tsEl && window.SignalDeck) window.SignalDeck.stamp(tsEl, geo.ts || Date.now(), "BRIEFING ");
+      }
+    } catch (e) {
+      console.warn("Geo briefing", e);
+      state.geoError = String(e && e.message || e);
+      state.geoFetchedAt = Date.now(); // don't hammer a failing endpoint
+    }
+    renderGeopolitical();
+    if (globe.initialized) drawGlobe();
+  }
+
   async function refresh(initial = false) {
     const btn = $("#refresh-btn"); btn.classList.add("spinning");
 
     await Promise.allSettled([
       fetchNews()
-        .then((d) => { state.news = d.items; renderNews(); buildTicker(); })
+        .then((d) => {
+          state.news = d.items; renderNews(); buildTicker();
+          const nu = $("#news-updated");
+          if (nu && window.SignalDeck) window.SignalDeck.stamp(nu, Date.now());
+        })
         .catch((e) => {
           console.warn("News", e);
-          if (state.news.length === 0) { const f = $("#tw-feed"); if (f) f.innerHTML = `<div class="tw-empty">News feeds are temporarily unavailable. Retrying in 5 minutes.</div>`; }
+          if (state.news.length === 0) feedError();
         }),
     ]);
 
-    // Geopolitical — use Claude if keyed, else show cached briefing.
-    if (CFG.CLAUDE_API_KEY) {
-      if (!state.geo) renderGeopolitical();
-      try {
-        const geo = await fetchGeopolitical(state.news);
-        if (geo) state.geo = geo;
-      } catch (e) {
-        console.warn("Geo AI", e);
-        toast("Claude briefing failed — showing cached");
-        if (!state.geo) state.geo = CACHED_GEO;
-      }
-    } else {
-      state.geo = CACHED_GEO;
-    }
-    renderGeopolitical();
-    if (globe.initialized) drawGlobe();
+    await refreshGeo(false);
 
     state.updated = new Date();
     applyMood();

@@ -53,11 +53,18 @@
               ? 'bear'
               : 'flat';
           const fresh = state.seen.has(it.headline) ? '' : ' wire-item--new';
+          const sent =
+            it.sentiment === 'bullish'
+              ? '<span class="wire-sent wire-sent--bull">BULL</span>'
+              : it.sentiment === 'bearish'
+              ? '<span class="wire-sent wire-sent--bear">BEAR</span>'
+              : '<span class="wire-sent wire-sent--flat">—</span>';
           return `<a class="wire-item wire-item--${tone}${fresh}" href="${esc(
             it.url
           )}" target="_blank" rel="noopener">
             <span class="wire-time">${fmtClock(it.time)}</span>
             <span class="wire-headline">${esc(it.headline)}</span>
+            ${sent}
             <span class="wire-source">${esc(it.source)}</span>
           </a>`;
         })
@@ -65,6 +72,29 @@
     }
     state.items.forEach((it) => state.seen.add(it.headline));
     if (countEl) countEl.textContent = String(items.length);
+  }
+
+  function skeleton(n = 8) {
+    const row = `
+      <div class="wire-skel-row">
+        <span class="skel" style="width:64px"></span>
+        <span class="skel" style="flex:1;max-width:${55 + Math.round(Math.random() * 35)}%"></span>
+        <span class="skel" style="width:70px"></span>
+      </div>`;
+    return Array.from({ length: n }, () => row).join('');
+  }
+
+  function showError() {
+    feed.innerHTML = `
+      <div class="data-error">
+        <div class="data-error-ico">!</div>
+        <div>
+          <div class="data-error-title">Wire unavailable</div>
+          <div>The 24/7 feed could not be reached. Auto-retry in 10s.</div>
+        </div>
+        <button class="data-error-retry" type="button">Retry now</button>
+      </div>`;
+    feed.querySelector('.data-error-retry').addEventListener('click', load);
   }
 
   async function load() {
@@ -75,12 +105,13 @@
       if (Array.isArray(data.items)) {
         state.items = data.items.sort((a, b) => b.time - a.time);
         render();
-        if (updatedEl) updatedEl.textContent = fmtClock(Date.now());
+        if (updatedEl) {
+          if (window.SignalDeck) window.SignalDeck.stamp(updatedEl, Date.now());
+          else updatedEl.textContent = fmtClock(Date.now());
+        }
       }
     } catch (e) {
-      if (!state.items.length) {
-        feed.innerHTML = `<div class="wire-empty">Wire unavailable — retrying…</div>`;
-      }
+      if (!state.items.length) showError();
     }
   }
 
@@ -107,6 +138,7 @@
   function start() {
     if (state.timer) return;
     if (dateEl) dateEl.textContent = fmtDateLong(Date.now());
+    feed.innerHTML = skeleton();
     load();
     state.timer = setInterval(load, 10000);
   }

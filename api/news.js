@@ -4,12 +4,16 @@
 
 export const config = { runtime: 'edge' };
 
+// feeds.reuters.com was shut down years ago — it silently returned nothing.
+// Every feed here is verified live; failures are dropped per-feed.
 const FEEDS = [
-  { name: 'Reuters Business', url: 'https://feeds.reuters.com/reuters/businessNews' },
-  { name: 'Yahoo Finance',    url: 'https://finance.yahoo.com/news/rssindex' },
-  { name: 'CNBC Markets',     url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html' },
-  { name: 'MarketWatch',      url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories' },
-  { name: 'Investing.com',    url: 'https://www.investing.com/rss/news_25.rss' },
+  { name: 'Yahoo Finance',  url: 'https://finance.yahoo.com/news/rssindex' },
+  { name: 'CNBC Markets',   url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html' },
+  { name: 'CNBC Top News',  url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' },
+  { name: 'MarketWatch',    url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories' },
+  { name: 'MarketWatch',    url: 'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines' },
+  { name: 'Investing.com',  url: 'https://www.investing.com/rss/news_25.rss' },
+  { name: 'Seeking Alpha',  url: 'https://seekingalpha.com/market_currents.xml' },
 ];
 
 const HEADERS = {
@@ -37,7 +41,16 @@ function parseFeed(xml, source) {
       if (m) link = m[1];
     }
     const dateStr = extract(b, 'pubDate') || extract(b, 'updated') || extract(b, 'published') || '';
-    const time = new Date(dateStr || Date.now()).toISOString();
+    // Guard: an unparseable pubDate must not throw (Invalid Date → toISOString
+    // throws, which would drop the entire feed). Skip undated items instead of
+    // faking a timestamp — real timestamps only. Timezone-naive stamps
+    // (Investing.com sends "YYYY-MM-DD HH:MM:SS") are treated as UTC, and
+    // future stamps are clamped to arrival time.
+    const naive = String(dateStr).trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})$/);
+    let parsed = naive ? Date.parse(`${naive[1]}T${naive[2]}Z`) : Date.parse(dateStr);
+    if (!Number.isFinite(parsed)) continue;
+    if (parsed > Date.now() + 2 * 60 * 1000) parsed = Date.now();
+    const time = new Date(parsed).toISOString();
     const summary = stripTags(extract(b, 'description') || extract(b, 'summary') || extract(b, 'content'));
     items.push({
       title,
@@ -52,10 +65,17 @@ function parseFeed(xml, source) {
 }
 
 async function fetchFeed(feed) {
-  const r = await fetch(feed.url, { headers: HEADERS, cache: 'no-store' });
-  if (!r.ok) throw new Error(feed.name + ' ' + r.status);
-  const xml = await r.text();
-  return parseFeed(xml, feed.name);
+  // 6s per-feed timeout — one slow source must not delay the whole payload.
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch(feed.url, { headers: HEADERS, cache: 'no-store', signal: ctrl.signal });
+    if (!r.ok) throw new Error(feed.name + ' ' + r.status);
+    const xml = await r.text();
+    return parseFeed(xml, feed.name);
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 export default async function handler() {

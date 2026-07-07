@@ -164,6 +164,15 @@
   };
 
   window.addEventListener('signal:quotes', renderAndMeasure);
+  // If quotes keep failing and we have nothing to show, say so — never an
+  // endless skeleton.
+  window.addEventListener('signal:quotes-error', (ev) => {
+    const el = document.getElementById(TRACK_ID);
+    const quotes = window.SignalMarket?.state?.quotes;
+    if (el && (!quotes || quotes.size === 0) && (ev.detail?.fails || 0) >= 2) {
+      el.innerHTML = '<span class="gt-loading">MARKET DATA OFFLINE — RECONNECTING…</span>';
+    }
+  });
   window.addEventListener('resize', measure);
 
   if (document.readyState !== 'loading') { renderAndMeasure(); bindDrag(); }
