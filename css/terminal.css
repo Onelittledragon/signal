@@ -3,19 +3,19 @@
 :root {
   --t-bg:        #000000;
   --t-amber:     #ffb000;
-  --t-amber-d:   #a87300;
-  --t-green:     #00ff66;
-  --t-green-d:   #00a040;
-  --t-red:       #ff3a3a;
-  --t-red-d:     #a02020;
+  --t-amber-d:   #c89000;
+  --t-green:     #00ff88;
+  --t-green-d:   #00c060;
+  --t-red:       #ff3333;
+  --t-red-d:     #d04040;
   --t-blue:      #66c0ff;
-  --t-blue-d:    #3878a8;
+  --t-blue-d:    #5a9fd4;
   --t-cyan:      #00e0e0;
   --t-yellow:    #ffe000;
-  --t-text:      #e8e8e8;
-  --t-dim:       #707070;
-  --t-mute:      #232323;
-  --t-line:      #1a1a1a;
+  --t-text:      #e6f2fb;
+  --t-dim:       #8fb2c5;
+  --t-mute:      #2b2b2b;
+  --t-line:      #2a2a2a;
   --t-mono:      'JetBrains Mono', 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
 }
 

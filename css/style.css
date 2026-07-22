@@ -1,18 +1,18 @@
 :root {
-  --bg: #0E1014;
-  --bg-alt: #171A20;
-  --bg-card: #14171D;
-  --ink: #ECEEF2;
-  --ink-soft: #B8BDC8;
-  --ink-mute: #6E7685;
-  --line: #242932;
-  --line-strong: #343B47;
-  --bull: #30D37A;
-  --bull-soft: rgba(48, 211, 122, 0.14);
-  --bear: #F14A3E;
-  --bear-soft: rgba(241, 74, 62, 0.14);
-  --amber: #E5A33A;
-  --amber-soft: rgba(229, 163, 58, 0.14);
+  --bg: #0a0e14;
+  --bg-alt: #111820;
+  --bg-card: #111820;
+  --ink: #e6f2fb;
+  --ink-soft: #c4d8e5;
+  --ink-mute: #8fb2c5;
+  --line: #1e2a35;
+  --line-strong: #2c3f4f;
+  --bull: #00ff88;
+  --bull-soft: rgba(0, 255, 136, 0.16);
+  --bear: #ff3333;
+  --bear-soft: rgba(255, 51, 51, 0.16);
+  --amber: #ffaa00;
+  --amber-soft: rgba(255, 170, 0, 0.16);
 
   /* Depth — three elevation layers, always paired with a hairline border */
   --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.25);
