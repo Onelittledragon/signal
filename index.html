@@ -151,6 +151,19 @@
           </div>
         </div>
 
+        <div class="symnews">
+          <label class="symnews-label" for="symnews-input">Search news by symbol</label>
+          <div class="symnews-row">
+            <input class="symnews-input" id="symnews-input" type="text"
+                   inputmode="latin" autocomplete="off" spellcheck="false"
+                   placeholder="Type a symbol — e.g. AAPL, TSLA, NVDA" maxlength="12" />
+            <button class="symnews-go" id="symnews-go">Search</button>
+            <button class="symnews-clear" id="symnews-clear" hidden>Clear</button>
+          </div>
+          <div class="symnews-status" id="symnews-status" hidden></div>
+          <div class="symnews-results" id="symnews-results" hidden></div>
+        </div>
+
         <div class="tw-feed" id="tw-feed"></div>
 
         <div class="tw-feed-foot">
@@ -524,6 +537,7 @@
 <script src="js/heatmap.js?v=4"></script>
 <script src="js/heatmap-grid.js?v=6"></script>
 <script src="js/wire.js?v=9"></script>
+<script src="js/symnews.js?v=1"></script>
 <script>
   // Mobile: relocate the tab nav out of .header so position:fixed escapes the
   // backdrop-filter containing block and pins to the viewport bottom.

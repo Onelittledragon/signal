@@ -62,6 +62,8 @@
     { sym:'C',     name:'Citigroup',       sector:'Financials', mcap:130, domain:'citigroup.com' },
     // Healthcare
     { sym:'LLY',   name:'Eli Lilly',       sector:'Healthcare', mcap:700, domain:'lilly.com' },
+    { sym:'MRNA',  name:'Moderna',         sector:'Healthcare', mcap:12,  domain:'modernatx.com' },
+    { sym:'SLS',   name:'SELLAS Life Sci.',sector:'Healthcare', mcap:1,   domain:'sellaslifesciences.com' },
     { sym:'UNH',   name:'UnitedHealth',    sector:'Healthcare', mcap:520, domain:'unitedhealthgroup.com' },
     { sym:'JNJ',   name:'J&J',             sector:'Healthcare', mcap:380, domain:'jnj.com' },
     { sym:'ABBV',  name:'AbbVie',          sector:'Healthcare', mcap:310, domain:'abbvie.com' },

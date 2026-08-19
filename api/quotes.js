@@ -17,7 +17,7 @@ const STOCKS = [
   'DIS','TMUS','VZ','CMCSA','T',
   'HD','MCD','NKE','LOW','SBUX','BKNG','TJX',
   'MA','BAC','WFC','GS','MS','BLK','AXP','C','SCHW','SPGI',
-  'LLY','UNH','JNJ','MRK','ABBV','PFE','TMO','ABT','ISRG','AMGN','DHR','BMY',
+  'LLY','UNH','JNJ','MRK','ABBV','PFE','TMO','ABT','ISRG','AMGN','DHR','BMY','MRNA','SLS',
   'PG','KO','PEP','PM','MO',
   'CVX','COP',
   'GE','RTX','CAT','HON','BA','UPS','UNP','LMT',

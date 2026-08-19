@@ -35,6 +35,8 @@
     { sym: 'V',     name: 'Visa Inc.' },
     { sym: 'WMT',   name: 'Walmart' },
     { sym: 'XOM',   name: 'Exxon Mobil' },
+    { sym: 'MRNA',  name: 'Moderna, Inc.' },
+    { sym: 'SLS',   name: 'SELLAS Life Sci.' },
   ];
 
   // Crypto (BTC only).
@@ -566,6 +568,7 @@
         BTC: ['BTC','BITCOIN'], NQ: ['NASDAQ','NQ','TECH STOCKS'],
         ES: ['S&P','SP500','ES FUTURES'], VIX: ['VIX','VOLATILITY'],
         DXY: ['DXY','DOLLAR'],
+        MRNA: ['MRNA','MODERNA'], SLS: ['SLS','SELLAS'],
       };
       const needles = tk ? (NEWS_ALIASES[tk] || [tk]) : null;
       const items = state.news.filter(n => {
