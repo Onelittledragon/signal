@@ -9,7 +9,7 @@
 
 export const config = { runtime: 'edge' };
 
-const MODEL = 'claude-opus-4-8';
+const MODEL = 'claude-haiku-4-5-20251001';
 
 // Headline context — a couple of fast wire feeds, fetched best-effort.
 const CONTEXT_FEEDS = [
