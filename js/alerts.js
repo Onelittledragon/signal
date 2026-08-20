@@ -7,7 +7,8 @@
 
   var LS_KEYS = 'signal.alerts.keywords';
   var LS_TG   = 'signal.alerts.telegram';
-  var LS_SEEN = 'signal.alerts.seenIds';
+  var LS_SEEN = 'signal.alerts.seenKeys';
+  var LS_NOTIFIED = 'signal.alerts.notifiedKeys';
   var POLL_MS = 45 * 1000;
 
   function $(id) { return document.getElementById(id); }
@@ -34,6 +35,14 @@
       .map(function (s) { return s.trim().toLowerCase(); })
       .filter(function (s) { return s.length > 0; });
   }
+  function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // Whole-word/phrase matcher so "dram" doesn't match "microdramas".
+  function buildMatchers(list) {
+    return list.map(function (k) { return { kw: k, re: new RegExp('(^|[^a-z0-9])' + escapeRe(k) + '([^a-z0-9]|$)', 'i') }; });
+  }
+  // Stable key for a story so the same headline is only ever counted once,
+  // even though the wire re-numbers item ids on every poll.
+  function keyOf(it) { return String(it && it.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
 
   function init() {
     var input = $('alerts-input');
@@ -48,14 +57,18 @@
     if (!input || !results) return;
 
     var keywords = parseKeywords(lsGet(LS_KEYS, ''));
+    var matchers = buildMatchers(keywords);
     input.value = lsGet(LS_KEYS, '');
     tgToggle.checked = lsGet(LS_TG, '') === '1';
 
     var matches = [];              // collected matching items (newest first)
-    var matchIds = {};             // id -> true, to avoid duplicates in the list
-    var seen = {};                 // ids already counted as "seen" (for badge/telegram)
-    try { (JSON.parse(lsGet(LS_SEEN, '[]')) || []).forEach(function (id) { seen[id] = true; }); } catch (e) {}
+    var matchKeys = {};            // stable story key -> true, avoids list dupes
+    var seen = {};                 // stable keys the user has viewed (badge)
+    var notified = {};             // stable keys already pushed to Telegram
+    try { (JSON.parse(lsGet(LS_SEEN, '[]')) || []).forEach(function (k) { seen[k] = true; }); } catch (e) {}
+    try { (JSON.parse(lsGet(LS_NOTIFIED, '[]')) || []).forEach(function (k) { notified[k] = true; }); } catch (e) {}
     var unseenCount = 0;
+    var backfill = true;  // first scan (and after a keyword change) seeds silently — no badge, no Telegram
 
     function setStatus(msg, isErr) {
       if (!msg) { statusEl.hidden = true; statusEl.textContent = ''; return; }
@@ -65,12 +78,15 @@
     function saveSeen() {
       lsSet(LS_SEEN, JSON.stringify(Object.keys(seen).slice(-500)));
     }
+    function saveNotified() {
+      lsSet(LS_NOTIFIED, JSON.stringify(Object.keys(notified).slice(-500)));
+    }
     function updateBadge() {
       if (unseenCount > 0) { badge.hidden = false; badge.textContent = unseenCount > 99 ? '99+' : String(unseenCount); }
       else { badge.hidden = true; }
     }
     function matchedKeyword(text) {
-      for (var i = 0; i < keywords.length; i++) { if (text.indexOf(keywords[i]) !== -1) return keywords[i]; }
+      for (var i = 0; i < matchers.length; i++) { if (matchers[i].re.test(text)) return matchers[i].kw; }
       return null;
     }
 
@@ -79,7 +95,7 @@
       clearBtn.hidden = matches.length === 0;
       emptyEl.style.display = matches.length ? 'none' : '';
       results.innerHTML = matches.map(function (n) {
-        var isNew = !seen[n.id];
+        var isNew = !seen[n.key];
         var t = relTime(n.time);
         var inner =
           '<div class="alert-item-meta">' +
@@ -117,33 +133,47 @@
         // Oldest-first so newest ends up on top after unshift.
         for (var i = items.length - 1; i >= 0; i--) {
           var it = items[i];
-          if (!it || !it.headline || matchIds[it.id]) continue;
+          if (!it || !it.headline) continue;
+          var k = keyOf(it);
+          if (!k || matchKeys[k]) continue;
           var hay = (it.headline + ' ' + (it.summary || '')).toLowerCase();
           var kw = matchedKeyword(hay);
           if (!kw) continue;
-          var rec = { id: it.id, headline: it.headline, source: it.source, url: it.url, time: it.time, kw: kw };
-          matchIds[it.id] = true;
+          var rec = { key: k, headline: it.headline, source: it.source, url: it.url, time: it.time, kw: kw };
+          matchKeys[k] = true;
           matches.unshift(rec);
           newlyAdded.push(rec);
         }
         if (matches.length > 100) matches = matches.slice(0, 100);
-        // Count + notify for genuinely new ones.
+        // Badge counts unseen stories; Telegram fires once per unique story.
         newlyAdded.forEach(function (rec) {
-          if (!seen[rec.id]) { unseenCount++; sendTelegram(rec); }
+          if (backfill) { seen[rec.key] = true; notified[rec.key] = true; return; }
+          if (!seen[rec.key]) unseenCount++;
+          if (!notified[rec.key]) { notified[rec.key] = true; saveNotified(); sendTelegram(rec); }
         });
-        if (newlyAdded.length) { render(); updateBadge(); }
+        if (backfill) { saveSeen(); saveNotified(); backfill = false; }
+        if (newlyAdded.length) {
+          render(); updateBadge();
+          // If the user is already looking at the Alerts tab, don't nag.
+          var panel = document.querySelector('.tab-panel[data-panel="alerts"]');
+          if (panel && panel.classList.contains('active')) markAllSeen();
+        }
       } catch (e) { /* ignore transient errors */ }
     }
 
     function markAllSeen() {
-      matches.forEach(function (n) { seen[n.id] = true; });
+      matches.forEach(function (n) { seen[n.key] = true; });
       unseenCount = 0; saveSeen(); updateBadge(); render();
     }
 
     saveBtn.addEventListener('click', function () {
       keywords = parseKeywords(input.value);
+      matchers = buildMatchers(keywords);
       lsSet(LS_KEYS, input.value);
+      // Rebuild the list against the new keywords; seed silently (no Telegram burst).
+      matches = []; matchKeys = {}; backfill = true;
       setStatus(keywords.length ? ('Watching for: ' + keywords.join(', ')) : 'Enter at least one keyword to start watching.', !keywords.length);
+      render();
       poll();
     });
     tgToggle.addEventListener('change', function () {
