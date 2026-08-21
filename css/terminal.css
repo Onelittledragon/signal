@@ -2,8 +2,8 @@
 
 :root {
   --t-bg:        #000000;
-  --t-amber:     #45a8ff;
-  --t-amber-d:   #2b7fd4;
+  --t-amber:     #5cb8ff;
+  --t-amber-d:   #3a92e6;
   --t-green:     #00ff88;
   --t-green-d:   #00c060;
   --t-red:       #ff3333;
@@ -63,15 +63,15 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
   position: absolute; inset: 0; pointer-events: none; z-index: 50;
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(255,255,255,0.018) 0px,
-    rgba(255,255,255,0.018) 1px,
+    rgba(255,255,255,0.010) 0px,
+    rgba(255,255,255,0.010) 1px,
     transparent 1px,
     transparent 3px
   );
 }
 .term-vignette {
   position: absolute; inset: 0; pointer-events: none; z-index: 49;
-  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.75) 100%);
+  background: radial-gradient(ellipse at center, transparent 80%, rgba(0,0,0,0.20) 100%);
 }
 
 .t-green  { color: var(--t-green); }
@@ -482,7 +482,7 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
     font-size: 22px;
     letter-spacing: 0.28em;
     line-height: 1;
-    text-shadow: 0 0 12px rgba(255,176,0,0.35);
+    text-shadow: 0 0 12px rgba(92,184,255,0.40);
   }
   .term-sub { font-size: 9.5px; letter-spacing: 0.18em; margin-top: 6px; }
   .term-statusline {
