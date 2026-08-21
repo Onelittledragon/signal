@@ -2,8 +2,8 @@
 
 :root {
   --t-bg:        #000000;
-  --t-amber:     #ffb000;
-  --t-amber-d:   #c89000;
+  --t-amber:     #45a8ff;
+  --t-amber-d:   #2b7fd4;
   --t-green:     #00ff88;
   --t-green-d:   #00c060;
   --t-red:       #ff3333;
@@ -147,17 +147,19 @@ body.terminal-mode .refresh-btn { color: var(--t-amber); border-color: var(--t-a
 .term-input::placeholder { color: var(--t-dim); text-transform: uppercase; }
 .term-input::selection { background: var(--t-amber); color: #000; }
 .term-exec {
-  background: transparent;
-  border: 1px solid var(--t-amber-d);
-  color: var(--t-amber);
-  padding: 4px 14px;
+  background: var(--t-amber);
+  border: 2px solid var(--t-amber);
+  color: #001022;
+  padding: 7px 20px;
   font-family: var(--t-mono);
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.15em;
   cursor: pointer;
   text-transform: uppercase;
+  border-radius: 4px;
 }
-.term-exec:hover { background: var(--t-amber); color: #000; }
+.term-exec:hover { background: #63b8ff; border-color: #63b8ff; color: #001022; }
 
 /* Blinking cursor when input is empty/focused */
 .term-cmd::after {
